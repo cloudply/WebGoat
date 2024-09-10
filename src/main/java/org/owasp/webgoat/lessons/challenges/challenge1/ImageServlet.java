@@ -14,7 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ImageServlet {
 
-  public static final int PINCODE = new Random().nextInt(10000);
+  private static final Random RANDOM = new Random();
+  public static final int PINCODE = RANDOM.nextInt(10000);
 
   @RequestMapping(
       method = {GET, POST},
