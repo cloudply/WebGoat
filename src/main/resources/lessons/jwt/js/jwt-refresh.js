@@ -7,7 +7,7 @@ function login(user) {
         type: 'POST',
         url: 'JWT/refresh/login',
         contentType: "application/json",
-        data: JSON.stringify({user: user, password: "bm5nhSkxCXZkKRy4"})
+        data: JSON.stringify({user: user, password: getPassword()})
     }).success(
         function (response) {
             localStorage.setItem('access_token', response['access_token']);
@@ -39,4 +39,10 @@ function newToken() {
             localStorage.setItem('refresh_token', refreshToken);
         }
     )
+}
+function getPassword() {
+    // This is a placeholder. In a real-world scenario, you would implement
+    // a secure method to retrieve the password, such as from an environment variable
+    // or a secure secret management system.
+    return process.env.USER_PASSWORD || '';
 }
