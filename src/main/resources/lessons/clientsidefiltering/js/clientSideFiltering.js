@@ -3,7 +3,18 @@ var dataFetched = false;
 function selectUser() {
 
     var newEmployeeID = $("#UserSelect").val();
-    document.getElementById("employeeRecord").innerHTML = document.getElementById(newEmployeeID).innerHTML;
+    var content = document.getElementById(newEmployeeID).innerHTML;
+    var sanitizedContent = escapeHtml(content);
+    document.getElementById("employeeRecord").innerHTML = sanitizedContent;
+}
+
+function escapeHtml(unsafe) {
+    return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
 }
 
 function fetchUserData() {
