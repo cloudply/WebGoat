@@ -15,6 +15,7 @@ import org.apache.commons.lang3.RandomUtils;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
 import org.owasp.webgoat.container.assignments.AttackResult;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
@@ -88,8 +89,8 @@ public class ProfileUploadRetrieval extends AssignmentEndpoint {
     }
     try {
       var id = request.getParameter("id");
-      var catPicture =
-          new File(catPicturesDirectory, (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg");
+      var sanitizedId = id == null ? String.valueOf(RandomUtils.nextInt(1, 11)) : FilenameUtils.getName(id);
+      var catPicture = new File(catPicturesDirectory, sanitizedId + ".jpg");
 
       if (catPicture.getName().toLowerCase().contains("path-traversal-secret.jpg")) {
         return ResponseEntity.ok()
