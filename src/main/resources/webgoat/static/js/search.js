@@ -11,7 +11,7 @@ input.addEventListener('keyup', function (e) {
 
 function search(arg) {
       var elementId = null;
-      lessons = document.querySelectorAll('[class="lesson"]');
+      let lessons = document.querySelectorAll('[class="lesson"]');
       lessons.forEach(function(lesson) {
         lessonLowerCase = lesson.textContent.toLowerCase();
         if (arg.length>2 && lessonLowerCase.includes(arg.toLowerCase())) {
