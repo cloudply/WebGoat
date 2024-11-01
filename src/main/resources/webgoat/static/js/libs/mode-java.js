@@ -957,6 +957,7 @@ oop.inherits(Mode, JavaScriptMode);
 (function() {
 
     this.createWorker = function(session) {
+        // Intentionally left empty as no worker is needed for Java mode
         return null;
     };
 

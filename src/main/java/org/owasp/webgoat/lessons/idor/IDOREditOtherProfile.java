@@ -62,54 +62,67 @@ public class IDOREditOtherProfile extends AssignmentEndpoint {
     // everyone, right?
     // Except that this is a vulnerable app ... so we will
     UserProfile currentUserProfile = new UserProfile(userId);
-    if (userSubmittedProfile.getUserId() != null
-        && !userSubmittedProfile.getUserId().equals(authUserId)) {
-      // let's get this started ...
-      currentUserProfile.setColor(userSubmittedProfile.getColor());
-      currentUserProfile.setRole(userSubmittedProfile.getRole());
-      // we will persist in the session object for now in case we want to refer back or use it later
-      userSessionData.setValue("idor-updated-other-profile", currentUserProfile);
-      if (currentUserProfile.getRole() <= 1
-          && currentUserProfile.getColor().equalsIgnoreCase("red")) {
+    if (isEditingOtherProfile(userSubmittedProfile, authUserId)) {
+        updateProfile(currentUserProfile, userSubmittedProfile);
+        userSessionData.setValue("idor-updated-other-profile", currentUserProfile);
+        return evaluateProfileUpdate(currentUserProfile);
+    } else if (isEditingOwnProfile(userSubmittedProfile, authUserId)) {
+        return failed(this).feedback("idor.edit.profile.failure4").build();
+    }
+
+    return evaluateOwnProfile(currentUserProfile);
+}
+
+private boolean isEditingOtherProfile(UserProfile userSubmittedProfile, String authUserId) {
+    return userSubmittedProfile.getUserId() != null && !userSubmittedProfile.getUserId().equals(authUserId);
+}
+
+private boolean isEditingOwnProfile(UserProfile userSubmittedProfile, String authUserId) {
+    return userSubmittedProfile.getUserId() != null && userSubmittedProfile.getUserId().equals(authUserId);
+}
+
+private void updateProfile(UserProfile currentUserProfile, UserProfile userSubmittedProfile) {
+    currentUserProfile.setColor(userSubmittedProfile.getColor());
+    currentUserProfile.setRole(userSubmittedProfile.getRole());
+}
+
+private AttackResult evaluateProfileUpdate(UserProfile currentUserProfile) {
+    if (currentUserProfile.getRole() <= 1 && currentUserProfile.getColor().equalsIgnoreCase("red")) {
         return success(this)
-            .feedback("idor.edit.profile.success1")
-            .output(currentUserProfile.profileToMap().toString())
-            .build();
-      }
-
-      if (currentUserProfile.getRole() > 1
-          && currentUserProfile.getColor().equalsIgnoreCase("red")) {
-        return failed(this)
-            .feedback("idor.edit.profile.failure1")
-            .output(currentUserProfile.profileToMap().toString())
-            .build();
-      }
-
-      if (currentUserProfile.getRole() <= 1
-          && !currentUserProfile.getColor().equalsIgnoreCase("red")) {
-        return failed(this)
-            .feedback("idor.edit.profile.failure2")
-            .output(currentUserProfile.profileToMap().toString())
-            .build();
-      }
-
-      // else
-      return failed(this)
-          .feedback("idor.edit.profile.failure3")
-          .output(currentUserProfile.profileToMap().toString())
-          .build();
-    } else if (userSubmittedProfile.getUserId() != null
-        && userSubmittedProfile.getUserId().equals(authUserId)) {
-      return failed(this).feedback("idor.edit.profile.failure4").build();
+                .feedback("idor.edit.profile.success1")
+                .output(currentUserProfile.profileToMap().toString())
+                .build();
     }
 
+    if (currentUserProfile.getRole() > 1 && currentUserProfile.getColor().equalsIgnoreCase("red")) {
+        return failed(this)
+                .feedback("idor.edit.profile.failure1")
+                .output(currentUserProfile.profileToMap().toString())
+                .build();
+    }
+
+    if (currentUserProfile.getRole() <= 1 && !currentUserProfile.getColor().equalsIgnoreCase("red")) {
+        return failed(this)
+                .feedback("idor.edit.profile.failure2")
+                .output(currentUserProfile.profileToMap().toString())
+                .build();
+    }
+
+    return failed(this)
+            .feedback("idor.edit.profile.failure3")
+            .output(currentUserProfile.profileToMap().toString())
+            .build();
+}
+
+private AttackResult evaluateOwnProfile(UserProfile currentUserProfile) {
     if (currentUserProfile.getColor().equals("black") && currentUserProfile.getRole() <= 1) {
-      return success(this)
-          .feedback("idor.edit.profile.success2")
-          .output(userSessionData.getValue("idor-updated-own-profile").toString())
-          .build();
+        return success(this)
+                .feedback("idor.edit.profile.success2")
+                .output(userSessionData.getValue("idor-updated-own-profile").toString())
+                .build();
     } else {
-      return failed(this).feedback("idor.edit.profile.failure3").build();
+        return failed(this).feedback("idor.edit.profile.failure3").build();
     }
+}
   }
 }

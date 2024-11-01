@@ -37,6 +37,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
  */
 public class SqlInjectionLesson9Test extends SqlLessonTest {
 
+  private static final String SQL_INJECTION_ATTACK9 = "/SqlInjection/attack9";
   private final String completedError = "JSON path \"lessonCompleted\"";
 
   @Test
@@ -44,7 +45,7 @@ public class SqlInjectionLesson9Test extends SqlLessonTest {
     try {
       mockMvc
           .perform(
-              MockMvcRequestBuilders.post("/SqlInjection/attack9")
+              MockMvcRequestBuilders.post(SQL_INJECTION_ATTACK9)
                   .param("name", "Smith")
                   .param("auth_tan", "3SL99A' OR '1' = '1'"))
           .andExpect(status().isOk())
@@ -55,7 +56,7 @@ public class SqlInjectionLesson9Test extends SqlLessonTest {
 
       mockMvc
           .perform(
-              MockMvcRequestBuilders.post("/SqlInjection/attack9")
+              MockMvcRequestBuilders.post(SQL_INJECTION_ATTACK9)
                   .param("name", "Smith")
                   .param("auth_tan", "3SL99A' OR '1' = '1'"))
           .andExpect(status().isOk())
@@ -69,7 +70,7 @@ public class SqlInjectionLesson9Test extends SqlLessonTest {
   public void SmithIsNotMostEarning() throws Exception {
     mockMvc
         .perform(
-            MockMvcRequestBuilders.post("/SqlInjection/attack9")
+            MockMvcRequestBuilders.post(SQL_INJECTION_ATTACK9)
                 .param("name", "Smith")
                 .param(
                     "auth_tan",
@@ -83,7 +84,7 @@ public class SqlInjectionLesson9Test extends SqlLessonTest {
   public void OnlySmithSalaryMustBeUpdated() throws Exception {
     mockMvc
         .perform(
-            MockMvcRequestBuilders.post("/SqlInjection/attack9")
+            MockMvcRequestBuilders.post(SQL_INJECTION_ATTACK9)
                 .param("name", "Smith")
                 .param("auth_tan", "3SL99A'; UPDATE employees SET salary = 9999 -- "))
         .andExpect(status().isOk())
@@ -95,7 +96,7 @@ public class SqlInjectionLesson9Test extends SqlLessonTest {
   public void OnlySmithMustMostEarning() throws Exception {
     mockMvc
         .perform(
-            MockMvcRequestBuilders.post("/SqlInjection/attack9")
+            MockMvcRequestBuilders.post(SQL_INJECTION_ATTACK9)
                 .param("name", "'; UPDATE employees SET salary = 999999 -- ")
                 .param("auth_tan", ""))
         .andExpect(status().isOk())

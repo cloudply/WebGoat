@@ -44,8 +44,8 @@ payloadinput.addEventListener('keyup', function (e) {
 });
 
 function call(encode) {
-        var url = encode ? 'jwt/encode' : 'jwt/decode';
-        var formData = encode ? $('#encodeForm').getFormData() : $('#decodeForm').getFormData();
+        const url = encode ? 'jwt/encode' : 'jwt/decode';
+        const formData = encode ? $('#encodeForm').getFormData() : $('#decodeForm').getFormData();
         formData["secretKey"] = $('#secretKey').val();
         console.log(formData);
 

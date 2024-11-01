@@ -28,8 +28,12 @@ package org.owasp.webgoat.lessons.challenges;
  * @author nbaars
  * @since 3/23/17.
  */
-public interface SolutionConstants {
+public final class SolutionConstants {
 
   // TODO should be random generated when starting the server
-  String PASSWORD = "!!webgoat_admin_1234!!";
+  public static final String PASSWORD = "!!webgoat_admin_1234!!";
+
+  private SolutionConstants() {
+    // Prevent instantiation
+  }
 }
