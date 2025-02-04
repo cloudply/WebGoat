@@ -31,7 +31,12 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class Assignment7 extends AssignmentEndpoint {
 
-  public static final String ADMIN_PASSWORD_LINK = "375afe1104f4a487a73823c50a9292a2";
+  static String ADMIN_PASSWORD_LINK; // Package-private for testing
+
+  @Value("${webgoat.challenge7.admin.password:defaultPasswordLink}")
+  public void setAdminPasswordLink(String adminPasswordLink) {
+    ADMIN_PASSWORD_LINK = adminPasswordLink;
+  }
 
   private static final String TEMPLATE =
       "Hi, you requested a password reset link, please use this <a target='_blank'"
