@@ -45,10 +45,12 @@ public class SSRFTask2 extends AssignmentEndpoint {
     return furBall(url);
   }
 
+  private static final String ALLOWED_URL = "http://ifconfig.pro";
+
   protected AttackResult furBall(String url) {
-    if (url.matches("http://ifconfig\\.pro")) {
+    if (ALLOWED_URL.equals(url)) {
       String html;
-      try (InputStream in = new URL(url).openStream()) {
+      try (InputStream in = new URL(ALLOWED_URL).openStream()) {
         html =
             new String(in.readAllBytes(), StandardCharsets.UTF_8)
                 .replaceAll("\n", "<br>"); // Otherwise the \n gets escaped in the response
