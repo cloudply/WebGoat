@@ -24,9 +24,8 @@ package org.owasp.webgoat.lessons.deserialization;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InvalidClassException;
-import java.io.ObjectInputStream;
 import java.util.Base64;
+import org.apache.commons.io.serialization.ValidatingObjectInputStream;
 import org.dummy.insecure.framework.VulnerableTaskHolder;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
@@ -54,32 +53,36 @@ public class InsecureDeserializationTask extends AssignmentEndpoint {
 
     b64token = token.replace('-', '+').replace('_', '/');
 
-    try (ObjectInputStream ois =
-        new ObjectInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(b64token)))) {
+    try {
+      ValidatingObjectInputStream ois =
+          new ValidatingObjectInputStream(
+              new ByteArrayInputStream(Base64.getDecoder().decode(b64token)));
+      ois.accept(VulnerableTaskHolder.class);
+
       before = System.currentTimeMillis();
       Object o = ois.readObject();
+      after = System.currentTimeMillis();
+
       if (!(o instanceof VulnerableTaskHolder)) {
-        if (o instanceof String) {
-          return failed(this).feedback("insecure-deserialization.stringobject").build();
-        }
         return failed(this).feedback("insecure-deserialization.wrongobject").build();
       }
-      after = System.currentTimeMillis();
-    } catch (InvalidClassException e) {
-      return failed(this).feedback("insecure-deserialization.invalidversion").build();
-    } catch (IllegalArgumentException e) {
-      return failed(this).feedback("insecure-deserialization.expired").build();
-    } catch (Exception e) {
-      return failed(this).feedback("insecure-deserialization.invalidversion").build();
-    }
 
-    delay = (int) (after - before);
-    if (delay > 7000) {
-      return failed(this).build();
+      VulnerableTaskHolder holder = (VulnerableTaskHolder) o;
+      if (holder.isValid()) {
+        delay = (int) (after - before);
+        if (delay > 7000 || delay < 3000) {
+          return failed(this).feedback("insecure-deserialization.delay").build();
+        }
+        return success(this).build();
+      } else {
+        return failed(this).feedback("insecure-deserialization.expired").build();
+      }
+    } catch (IllegalStateException | IllegalArgumentException e) {
+      return failed(this).feedback("insecure-deserialization.expired").build();
+    } catch (IOException e) {
+      return failed(this).feedback("insecure-deserialization.invalidversion").build();
+    } catch (Exception e) {
+      return failed(this).feedback("insecure-deserialization.wrongobject").build();
     }
-    if (delay < 3000) {
-      return failed(this).build();
-    }
-    return success(this).build();
   }
 }
