@@ -32,10 +32,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -73,40 +73,53 @@ public class Salaries {
   @GetMapping("clientSideFiltering/salaries")
   @ResponseBody
   public List<Map<String, Object>> invoke() {
-    NodeList nodes = null;
-    File d = new File(webGoatHomeDirectory, "ClientSideFiltering/employees.xml");
-    XPathFactory factory = XPathFactory.newInstance();
-    XPath path = factory.newXPath();
-    int columns = 5;
     List<Map<String, Object>> json = new ArrayList<>();
-    java.util.Map<String, Object> employeeJson = new HashMap<>();
+    Map<String, Object> employeeJson = null;
+    File employeeFile = new File(webGoatHomeDirectory, "ClientSideFiltering/employees.xml");
 
-    try (InputStream is = new FileInputStream(d)) {
-      InputSource inputSource = new InputSource(is);
-
-      StringBuilder sb = new StringBuilder();
-
-      sb.append("/Employees/Employee/UserID | ");
-      sb.append("/Employees/Employee/FirstName | ");
-      sb.append("/Employees/Employee/LastName | ");
-      sb.append("/Employees/Employee/SSN | ");
-      sb.append("/Employees/Employee/Salary ");
-
-      String expression = sb.toString();
-      nodes = (NodeList) path.evaluate(expression, inputSource, XPathConstants.NODESET);
-      for (int i = 0; i < nodes.getLength(); i++) {
-        if (i % columns == 0) {
-          employeeJson = new HashMap<>();
-          json.add(employeeJson);
+    try (InputStream is = new FileInputStream(employeeFile)) {
+      XMLInputFactory factory = XMLInputFactory.newInstance();
+      // Disable external entities and DTD processing
+      factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+      factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+      
+      XMLStreamReader reader = factory.createXMLStreamReader(is);
+      
+      String currentElement = "";
+      while (reader.hasNext()) {
+        int event = reader.next();
+        
+        switch (event) {
+          case XMLStreamConstants.START_ELEMENT:
+            currentElement = reader.getLocalName();
+            if ("Employee".equals(currentElement)) {
+              employeeJson = new HashMap<>();
+              json.add(employeeJson);
+            }
+            break;
+            
+          case XMLStreamConstants.CHARACTERS:
+            if (employeeJson != null && !reader.isWhiteSpace()) {
+              String text = reader.getText().trim();
+              if (!text.isEmpty() && isRelevantField(currentElement)) {
+                employeeJson.put(currentElement, text);
+              }
+            }
+            break;
         }
-        Node node = nodes.item(i);
-        employeeJson.put(node.getNodeName(), node.getTextContent());
       }
-    } catch (XPathExpressionException e) {
-      log.error("Unable to parse xml", e);
-    } catch (IOException e) {
-      log.error("Unable to read employees.xml at location: '{}'", d);
+      reader.close();
+    } catch (IOException | XMLStreamException e) {
+      log.error("Error processing employees.xml at location: '{}'", employeeFile, e);
     }
     return json;
+  }
+  
+  private boolean isRelevantField(String fieldName) {
+    return "UserID".equals(fieldName) 
+        || "FirstName".equals(fieldName)
+        || "LastName".equals(fieldName)
+        || "SSN".equals(fieldName)
+        || "Salary".equals(fieldName);
   }
 }
