@@ -32,10 +32,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+import javax.xml.xpath.XPathFactoryConfigurationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -75,13 +80,24 @@ public class Salaries {
   public List<Map<String, Object>> invoke() {
     NodeList nodes = null;
     File d = new File(webGoatHomeDirectory, "ClientSideFiltering/employees.xml");
-    XPathFactory factory = XPathFactory.newInstance();
-    XPath path = factory.newXPath();
     int columns = 5;
     List<Map<String, Object>> json = new ArrayList<>();
     java.util.Map<String, Object> employeeJson = new HashMap<>();
 
     try (InputStream is = new FileInputStream(d)) {
+      // Create a secure DocumentBuilderFactory
+      DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+      dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+      dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+      dbf.setExpandEntityReferences(false);
+
+      // Create XPath with secure processing
+      XPathFactory factory = XPathFactory.newInstance();
+      factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+      XPath path = factory.newXPath();
+
+      // Parse document securely
+      DocumentBuilder builder = dbf.newDocumentBuilder();
       InputSource inputSource = new InputSource(is);
 
       StringBuilder sb = new StringBuilder();
@@ -106,6 +122,10 @@ public class Salaries {
       log.error("Unable to parse xml", e);
     } catch (IOException e) {
       log.error("Unable to read employees.xml at location: '{}'", d);
+    } catch (ParserConfigurationException e) {
+      log.error("Error configuring XML parser", e);
+    } catch (XPathFactoryConfigurationException e) {
+      log.error("Error configuring XPath factory", e);
     }
     return json;
   }
