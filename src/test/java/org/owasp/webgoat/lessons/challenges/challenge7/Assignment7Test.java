@@ -75,7 +75,7 @@ public class Assignment7Test extends AssignmentEndpointTest {
     result =
         mockMvc.perform(
             MockMvcRequestBuilders.get(
-                RESET_PASSWORD_PATH + "/" + Assignment7.ADMIN_PASSWORD_LINK));
+                RESET_PASSWORD_PATH + "/" + Assignment7.getAdminPasswordLink()));
     result.andExpect(status().is(equalTo(HttpStatus.ACCEPTED.value())));
   }
 
