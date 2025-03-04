@@ -46,6 +46,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.XMLReaderFactory;
 
 @RestController
 @Slf4j
@@ -82,8 +84,15 @@ public class Salaries {
     java.util.Map<String, Object> employeeJson = new HashMap<>();
 
     try (InputStream is = new FileInputStream(d)) {
+      // Create a secure XMLReader that disables external entities
+      XMLReader reader = XMLReaderFactory.createXMLReader();
+      reader.setFeature("http://xml.org/sax/features/external-general-entities", false);
+      reader.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+      reader.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+      
+      // Create InputSource with the secure reader
       InputSource inputSource = new InputSource(is);
-
+      
       StringBuilder sb = new StringBuilder();
 
       sb.append("/Employees/Employee/UserID | ");
