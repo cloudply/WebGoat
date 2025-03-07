@@ -75,13 +75,21 @@ public class Salaries {
   public List<Map<String, Object>> invoke() {
     NodeList nodes = null;
     File d = new File(webGoatHomeDirectory, "ClientSideFiltering/employees.xml");
-    XPathFactory factory = XPathFactory.newInstance();
-    XPath path = factory.newXPath();
-    int columns = 5;
     List<Map<String, Object>> json = new ArrayList<>();
     java.util.Map<String, Object> employeeJson = new HashMap<>();
+    int columns = 5;
 
-    try (InputStream is = new FileInputStream(d)) {
+    try {
+      XPathFactory factory = XPathFactory.newInstance();
+      XPath path = factory.newXPath();
+      
+      try {
+        factory.setFeature("http://javax.xml.XMLConstants/feature/secure-processing", true);
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+      } catch (javax.xml.xpath.XPathFactoryConfigurationException e) {
+        log.warn("Unable to configure XPath factory with secure features - continuing with reduced security", e);
+      }
+      try (InputStream is = new FileInputStream(d)) {
       InputSource inputSource = new InputSource(is);
 
       StringBuilder sb = new StringBuilder();
@@ -101,6 +109,7 @@ public class Salaries {
         }
         Node node = nodes.item(i);
         employeeJson.put(node.getNodeName(), node.getTextContent());
+      }
       }
     } catch (XPathExpressionException e) {
       log.error("Unable to parse xml", e);
