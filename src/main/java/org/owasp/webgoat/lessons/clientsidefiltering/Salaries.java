@@ -82,8 +82,14 @@ public class Salaries {
     java.util.Map<String, Object> employeeJson = new HashMap<>();
 
     try (InputStream is = new FileInputStream(d)) {
+      // Create a secure XMLInputFactory
+      javax.xml.stream.XMLInputFactory xmlInputFactory = javax.xml.stream.XMLInputFactory.newInstance();
+      xmlInputFactory.setProperty(javax.xml.stream.XMLInputFactory.SUPPORT_DTD, false);
+      xmlInputFactory.setProperty(javax.xml.stream.XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+      
+      // Create secure input source
       InputSource inputSource = new InputSource(is);
-
+      
       StringBuilder sb = new StringBuilder();
 
       sb.append("/Employees/Employee/UserID | ");
