@@ -58,28 +58,31 @@ public class InsecureDeserializationTask extends AssignmentEndpoint {
         new ObjectInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(b64token)))) {
       before = System.currentTimeMillis();
       Object o = ois.readObject();
+      
+      // Check if object is the expected type
       if (!(o instanceof VulnerableTaskHolder)) {
         if (o instanceof String) {
           return failed(this).feedback("insecure-deserialization.stringobject").build();
         }
         return failed(this).feedback("insecure-deserialization.wrongobject").build();
       }
+
       after = System.currentTimeMillis();
-    } catch (InvalidClassException e) {
-      return failed(this).feedback("insecure-deserialization.invalidversion").build();
+      delay = (int) (after - before);
+
+      // Validate timing constraints
+      if (delay > 7000 || delay < 3000) {
+        return failed(this).feedback("insecure-deserialization.expired").build();
+      }
+
+      return success(this).feedback("insecure-deserialization.success").lessonCompleted(true).build();
+
     } catch (IllegalArgumentException e) {
       return failed(this).feedback("insecure-deserialization.expired").build();
+    } catch (InvalidClassException e) {
+      return failed(this).feedback("insecure-deserialization.invalidversion").build();
     } catch (Exception e) {
       return failed(this).feedback("insecure-deserialization.invalidversion").build();
     }
-
-    delay = (int) (after - before);
-    if (delay > 7000) {
-      return failed(this).build();
-    }
-    if (delay < 3000) {
-      return failed(this).build();
-    }
-    return success(this).build();
   }
 }
