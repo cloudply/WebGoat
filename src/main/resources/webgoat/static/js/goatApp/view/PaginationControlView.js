@@ -42,68 +42,67 @@ define(['jquery',
             },
 
             parseLinks: function() {
-                var assignmentCount = this.$contentPages.find('.attack-container');
-                var solvedMap = {};
-                var pages = [];
-
-                _.each(this.collection.models, function(model) {
-                    //alert (model.get('solved'));
-                     if (model.get('solved')) {
-                        var key = model.get('assignment').path.replace(/\//g,'');
-                        solvedMap[key] = model.get('assignment').name;
-                     }
-
-                });
-
-                isAttackSolved = function (path) {
-                    //strip
-                    //var newPath = path.replace(/^\/WebGoat/,'');
-                    var newPath = path.replace(/\//g,'');
-                    if (typeof solvedMap[newPath] !== 'undefined') {
-                        return true;
-                    }
-                    return false;
-                };
-
-                var self = this;
-                var pages, pageClass, solved;
-                _.each(this.$contentPages,function(page,index) {
-                    var curPageClass = (self.currentPage == index) ? ' cur-page' : '';
-
-                    if ($(page).find('.attack-container').length < 1) { // no assignments [attacks]
-                        pageClass = 'page-link';
-                        pages.push({content:'content',pageClass:pageClass,curPageClass:curPageClass});
-                    } else {
-                        var $assignmentForms = $(page).find('.attack-container form.attack-form');
-                        // use for loop to avoid anonymous function scope hell
-                        //var pageAssignments = {content:'attack',attacks:[]}
-                        pageClass = 'attack-link'
-                        var solvedClass = 'solved-true'
-                        for (var i=0; i< $assignmentForms.length; i++) {
-                            //normalize path
-                            var action = $assignmentForms.attr('action');
-                            if (action.endsWith("WebWolf/mail/")) {
-                            	//fix for now. the find does not seem to work properly and gets confused with two /mail
-                            	action = "WebWolf/mail/send";
-                            }
-                            if (action.indexOf("?")>-1) {
-                            	//used to also mark forms like JWT assignment 8 complete
-                            	action = action.substring(0,action.indexOf("?"));
-                            }
-                            if (action && isAttackSolved(action)) {
-                            } else {
-                            	solvedClass = 'solved-false';
-                            }
-                        }
-                        pages.push({solvedClass:solvedClass,content:'assignment',curPageClass:curPageClass,pageClass:pageClass});
-                    }
-                });
+                var solvedMap = this.createSolvedMap();
+                var pages = this.createPages(solvedMap);
 
                 //assign to the view
                 this.lessonOverview = {
                     baseUrl: this.baseUrl,
                     pages: pages
                 }
+            },
+
+            createSolvedMap: function() {
+                var solvedMap = {};
+                _.each(this.collection.models, function(model) {
+                    if (model.get('solved')) {
+                        var key = model.get('assignment').path.replace(/\//g,'');
+                        solvedMap[key] = model.get('assignment').name;
+                    }
+                });
+                return solvedMap;
+            },
+
+            isAttackSolved: function(path, solvedMap) {
+                var newPath = path.replace(/\//g,'');
+                return typeof solvedMap[newPath] !== 'undefined';
+            },
+
+            createPages: function(solvedMap) {
+                var self = this;
+                var pages = [];
+                _.each(this.$contentPages, function(page, index) {
+                    var curPageClass = (self.currentPage == index) ? ' cur-page' : '';
+                    if ($(page).find('.attack-container').length < 1) {
+                        pages.push({content:'content', pageClass:'page-link', curPageClass:curPageClass});
+                    } else {
+                        pages.push(self.createAssignmentPage(page, curPageClass, solvedMap));
+                    }
+                });
+                return pages;
+            },
+
+            createAssignmentPage: function(page, curPageClass, solvedMap) {
+                var $assignmentForms = $(page).find('.attack-container form.attack-form');
+                var solvedClass = 'solved-true';
+                for (var i = 0; i < $assignmentForms.length; i++) {
+                    var action = this.normalizeAction($assignmentForms.attr('action'));
+                    if (!(action && this.isAttackSolved(action, solvedMap))) {
+                        solvedClass = 'solved-false';
+                        break;
+                    }
+                }
+                return {solvedClass:solvedClass, content:'assignment', curPageClass:curPageClass, pageClass:'attack-link'};
+            },
+
+            normalizeAction: function(action) {
+                if (action.endsWith("WebWolf/mail/")) {
+                    return "WebWolf/mail/send";
+                }
+                if (action.indexOf("?") > -1) {
+                    return action.substring(0, action.indexOf("?"));
+                }
+                return action;
             },
 
             showPrevPageButton: function() {
