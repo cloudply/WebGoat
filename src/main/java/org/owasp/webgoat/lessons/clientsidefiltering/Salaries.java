@@ -76,6 +76,16 @@ public class Salaries {
     NodeList nodes = null;
     File d = new File(webGoatHomeDirectory, "ClientSideFiltering/employees.xml");
     XPathFactory factory = XPathFactory.newInstance();
+    try {
+        factory.setFeature("http://javax.xml.XMLConstants/feature/secure-processing", true);
+    } catch (javax.xml.xpath.XPathFactoryConfigurationException e) {
+        log.warn("Unable to enable secure-processing feature", e);
+    }
+    try {
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+    } catch (javax.xml.xpath.XPathFactoryConfigurationException e) {
+        log.warn("Unable to disable DTD processing", e);
+    }
     XPath path = factory.newXPath();
     int columns = 5;
     List<Map<String, Object>> json = new ArrayList<>();
