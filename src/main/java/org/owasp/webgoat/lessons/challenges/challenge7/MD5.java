@@ -175,6 +175,13 @@ public class MD5 {
    * @since ostermillerutils 1.00.00
    */
   public static String getHashString(File f) throws IOException {
+    // Validate file path for path traversal attempts
+    String canonicalPath = f.getCanonicalPath();
+    String absolutePath = f.getAbsolutePath();
+    if (!canonicalPath.equals(absolutePath)) {
+      throw new IllegalArgumentException("Invalid file path - possible path traversal attempt");
+    }
+    
     String hash = null;
     try (InputStream is = new FileInputStream(f)) {
       hash = getHashString(is);
