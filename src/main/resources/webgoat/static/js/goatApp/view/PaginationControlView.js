@@ -66,37 +66,35 @@ define(['jquery',
                 };
 
                 var self = this;
-                var pages, pageClass, solved;
-                _.each(this.$contentPages,function(page,index) {
+                var pages = [];
+                
+                function processPage(page, index) {
                     var curPageClass = (self.currentPage == index) ? ' cur-page' : '';
-
-                    if ($(page).find('.attack-container').length < 1) { // no assignments [attacks]
-                        pageClass = 'page-link';
-                        pages.push({content:'content',pageClass:pageClass,curPageClass:curPageClass});
-                    } else {
-                        var $assignmentForms = $(page).find('.attack-container form.attack-form');
-                        // use for loop to avoid anonymous function scope hell
-                        //var pageAssignments = {content:'attack',attacks:[]}
-                        pageClass = 'attack-link'
-                        var solvedClass = 'solved-true'
-                        for (var i=0; i< $assignmentForms.length; i++) {
-                            //normalize path
-                            var action = $assignmentForms.attr('action');
-                            if (action.endsWith("WebWolf/mail/")) {
-                            	//fix for now. the find does not seem to work properly and gets confused with two /mail
-                            	action = "WebWolf/mail/send";
-                            }
-                            if (action.indexOf("?")>-1) {
-                            	//used to also mark forms like JWT assignment 8 complete
-                            	action = action.substring(0,action.indexOf("?"));
-                            }
-                            if (action && isAttackSolved(action)) {
-                            } else {
-                            	solvedClass = 'solved-false';
-                            }
-                        }
-                        pages.push({solvedClass:solvedClass,content:'assignment',curPageClass:curPageClass,pageClass:pageClass});
+                    var hasAttackContainer = $(page).find('.attack-container').length > 0;
+                    
+                    if (!hasAttackContainer) {
+                        return {content:'content', pageClass:'page-link', curPageClass:curPageClass};
                     }
+                    
+                    var $assignmentForms = $(page).find('.attack-container form.attack-form');
+                    var solvedClass = 'solved-true';
+                    var action = $assignmentForms.attr('action');
+                    
+                    if (action) {
+                        if (action.endsWith("WebWolf/mail/")) {
+                            action = "WebWolf/mail/send";
+                        }
+                        action = action.split('?')[0];
+                        if (!isAttackSolved(action)) {
+                            solvedClass = 'solved-false';
+                        }
+                    }
+                    
+                    return {solvedClass:solvedClass, content:'assignment', curPageClass:curPageClass, pageClass:'attack-link'};
+                }
+                
+                _.each(this.$contentPages, function(page, index) {
+                    pages.push(processPage(page, index));
                 });
 
                 //assign to the view
