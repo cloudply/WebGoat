@@ -74,11 +74,19 @@ public class Salaries {
   @ResponseBody
   public List<Map<String, Object>> invoke() {
     NodeList nodes = null;
+    List<Map<String, Object>> json = new ArrayList<>();
     File d = new File(webGoatHomeDirectory, "ClientSideFiltering/employees.xml");
     XPathFactory factory = XPathFactory.newInstance();
-    XPath path = factory.newXPath();
+    XPath path;
+    try {
+        // Configure to prevent XXE attacks
+        factory.setFeature("http://javax.xml.XMLConstants/feature/secure-processing", true);
+        path = factory.newXPath();
+    } catch (javax.xml.xpath.XPathFactoryConfigurationException e) {
+        log.error("Unable to configure XPathFactory", e);
+        return json;
+    }
     int columns = 5;
-    List<Map<String, Object>> json = new ArrayList<>();
     java.util.Map<String, Object> employeeJson = new HashMap<>();
 
     try (InputStream is = new FileInputStream(d)) {
