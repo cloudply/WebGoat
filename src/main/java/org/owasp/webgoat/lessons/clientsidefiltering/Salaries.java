@@ -32,10 +32,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -81,11 +86,10 @@ public class Salaries {
     List<Map<String, Object>> json = new ArrayList<>();
     java.util.Map<String, Object> employeeJson = new HashMap<>();
 
-    try (InputStream is = new FileInputStream(d)) {
-      InputSource inputSource = new InputSource(is);
+    try {
+      Document doc = getSecureXmlDocument(d);
 
       StringBuilder sb = new StringBuilder();
-
       sb.append("/Employees/Employee/UserID | ");
       sb.append("/Employees/Employee/FirstName | ");
       sb.append("/Employees/Employee/LastName | ");
@@ -93,7 +97,7 @@ public class Salaries {
       sb.append("/Employees/Employee/Salary ");
 
       String expression = sb.toString();
-      nodes = (NodeList) path.evaluate(expression, inputSource, XPathConstants.NODESET);
+      nodes = (NodeList) path.evaluate(expression, doc, XPathConstants.NODESET);
       for (int i = 0; i < nodes.getLength(); i++) {
         if (i % columns == 0) {
           employeeJson = new HashMap<>();
@@ -108,5 +112,27 @@ public class Salaries {
       log.error("Unable to read employees.xml at location: '{}'", d);
     }
     return json;
+  }
+
+  private Document getSecureXmlDocument(File file) throws IOException {
+    try {
+      DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+      // Disable external entities and DTD processing
+      dbFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+      dbFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+      dbFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+      dbFactory.setExpandEntityReferences(false);
+      
+      DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+      Document doc = dBuilder.parse(file);
+      doc.getDocumentElement().normalize();
+      return doc;
+    } catch (ParserConfigurationException e) {
+      log.error("Parser configuration error", e);
+      throw new IOException("XML parser configuration error", e);
+    } catch (SAXException e) {
+      log.error("SAX parsing error", e);
+      throw new IOException("XML parsing error", e);
+    }
   }
 }
