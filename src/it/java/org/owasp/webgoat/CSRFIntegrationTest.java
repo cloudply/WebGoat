@@ -23,13 +23,13 @@ import org.owasp.webgoat.container.lessons.Assignment;
 
 public class CSRFIntegrationTest extends IntegrationTest {
 
-  private static final String trickHTML3 =
+  private static final String TRICK_HTML_3 =
       "<!DOCTYPE html><html><body><form action=\"WEBGOATURL\" method=\"POST\">\n"
           + "<input type=\"hidden\" name=\"csrf\" value=\"thisisnotchecked\"/>\n"
           + "<input type=\"submit\" name=\"submit\" value=\"assignment 3\"/>\n"
           + "</form></body></html>";
 
-  private static final String trickHTML4 =
+  private static final String TRICK_HTML_4 =
       "<!DOCTYPE html><html><body><form action=\"WEBGOATURL\" method=\"POST\">\n"
           + "<input type=\"hidden\" name=\"reviewText\" value=\"hoi\"/>\n"
           + "<input type=\"hidden\" name=\"starts\" value=\"3\"/>\n"
@@ -39,7 +39,7 @@ public class CSRFIntegrationTest extends IntegrationTest {
           + "</form>\n"
           + "</body></html>";
 
-  private static final String trickHTML7 =
+  private static final String TRICK_HTML_7 =
       "<!DOCTYPE html><html><body><form action=\"WEBGOATURL\" enctype='text/plain'"
           + " method=\"POST\">\n"
           + "<input type=\"hidden\""
@@ -48,7 +48,7 @@ public class CSRFIntegrationTest extends IntegrationTest {
           + "<input type=\"submit\" value=\"assignment 7\"/>\n"
           + "</form></body></html>";
 
-  private static final String trickHTML8 =
+  private static final String TRICK_HTML_8 =
       "<!DOCTYPE html><html><body><form action=\"WEBGOATURL\" method=\"POST\">\n"
           + "<input type=\"hidden\" name=\"username\" value=\"csrf-USERNAME\"/>\n"
           + "<input type=\"hidden\" name=\"password\" value=\"password\"/>\n"
@@ -64,12 +64,12 @@ public class CSRFIntegrationTest extends IntegrationTest {
   public void init() {
     startLesson("CSRF");
     webwolfFileDir = getWebWolfFileServerLocation();
-    uploadTrickHtml("csrf3.html", trickHTML3.replace("WEBGOATURL", url("csrf/basic-get-flag")));
-    uploadTrickHtml("csrf4.html", trickHTML4.replace("WEBGOATURL", url("csrf/review")));
-    uploadTrickHtml("csrf7.html", trickHTML7.replace("WEBGOATURL", url("csrf/feedback/message")));
+    uploadTrickHtml("csrf3.html", TRICK_HTML_3.replace("WEBGOATURL", url("csrf/basic-get-flag")));
+    uploadTrickHtml("csrf4.html", TRICK_HTML_4.replace("WEBGOATURL", url("csrf/review")));
+    uploadTrickHtml("csrf7.html", TRICK_HTML_7.replace("WEBGOATURL", url("csrf/feedback/message")));
     uploadTrickHtml(
         "csrf8.html",
-        trickHTML8.replace("WEBGOATURL", url("login")).replace("USERNAME", this.getUser()));
+        TRICK_HTML_8.replace("WEBGOATURL", url("login")).replace("USERNAME", this.getUser()));
   }
 
   @TestFactory
