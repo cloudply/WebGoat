@@ -41,16 +41,19 @@ public class CryptoUtil {
     return keyPairGenerator.generateKeyPair();
   }
 
+  private static final String PEM_HEADER =
+      System.getenv().getOrDefault("PEM_HEADER", "-----BEGIN PRIVATE KEY-----");
+  private static final String PEM_FOOTER =
+      System.getenv().getOrDefault("PEM_FOOTER", "-----END PRIVATE KEY-----");
+
   public static String getPrivateKeyInPEM(KeyPair keyPair) {
-    String encodedString = "-----BEGIN PRIVATE KEY-----\n";
-    encodedString =
-        encodedString
-            + new String(
-                Base64.getEncoder().encode(keyPair.getPrivate().getEncoded()),
-                Charset.forName("UTF-8"))
-            + "\n";
-    encodedString = encodedString + "-----END PRIVATE KEY-----\n";
-    return encodedString;
+    return PEM_HEADER
+        + "\n"
+        + new String(
+            Base64.getEncoder().encode(keyPair.getPrivate().getEncoded()), Charset.forName("UTF-8"))
+        + "\n"
+        + PEM_FOOTER
+        + "\n";
   }
 
   public static String signMessage(String message, PrivateKey privateKey) {
