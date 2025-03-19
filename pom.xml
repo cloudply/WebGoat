@@ -603,6 +603,10 @@
             <includes>
               <include>**/*.md</include>
             </includes>
+            <excludes>
+              <exclude>**/.sonar/**</exclude>
+              <exclude>target/**</exclude>
+            </excludes>
             <flexmark></flexmark>
           </markdown>
           <java>

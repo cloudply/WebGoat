@@ -24,9 +24,9 @@ $(function () {
                 $.each(obj, function(j, quest) {
                   html += "<div id='question_" + j + "' class='quiz_question' name='question'><p>" + (j+1) + ".&nbsp;" + quest.text + "</p>";
                   html += "<fieldset>";
-                  $.each(quest.solutions, function(k, solution) {
-                    solution = "Solution " + k + ": " + solution;
-                    html += '<input id="question_' + j + '_' + k + '_input" type="radio" name="question_' + j +'_solution" value="' + solution + '" required><label for="question_' + j + '_' + k + '_input">' + solution + '</label><br>';
+                  quest.solutions.forEach((solution, k) => {
+                    const formattedSolution = "Solution " + k + ": " + solution;
+                    html += '<input id="question_' + j + '_' + k + '_input" type="radio" name="question_' + j +'_solution" value="' + formattedSolution + '" required><label for="question_' + j + '_' + k + '_input">' + formattedSolution + '</label><br>';
                   });
                   html += "</fieldset></div>";
                 });
