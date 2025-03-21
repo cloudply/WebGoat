@@ -63,9 +63,14 @@ public class SqlInjectionLesson6a extends AssignmentEndpoint {
     String query = "";
     try (Connection connection = dataSource.getConnection()) {
       boolean usedUnion = true;
+      // Limit input length to prevent ReDoS
+      if (accountName.length() > 1000) {
+        return failed(this).output("Input too long").build();
+      }
+
       query = "SELECT * FROM user_data WHERE last_name = '" + accountName + "'";
-      // Check if Union is used
-      if (!accountName.matches("(?i)(^[^-/*;)]*)(\\s*)UNION(.*$)")) {
+      // Check if Union is used with simplified regex
+      if (!accountName.toLowerCase().matches("^[^-/*;)]*union.*$")) {
         usedUnion = false;
       }
       try (Statement statement =

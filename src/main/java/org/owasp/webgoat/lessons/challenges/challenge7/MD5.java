@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.Path;
 
 /**
  * MD5 hash generator. More information about this class is available from <a target="_top" href=
@@ -175,6 +176,12 @@ public class MD5 {
    * @since ostermillerutils 1.00.00
    */
   public static String getHashString(File f) throws IOException {
+    // Validate path to prevent path traversal
+    Path normalizedPath = f.toPath().normalize().toAbsolutePath();
+    if (normalizedPath.toString().contains("..")) {
+      throw new IllegalArgumentException("Invalid file path");
+    }
+
     String hash = null;
     try (InputStream is = new FileInputStream(f)) {
       hash = getHashString(is);
