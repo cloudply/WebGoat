@@ -54,8 +54,12 @@ public class InsecureDeserializationTask extends AssignmentEndpoint {
 
     b64token = token.replace('-', '+').replace('_', '/');
 
-    try (ObjectInputStream ois =
-        new ObjectInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(b64token)))) {
+    if (b64token == null || b64token.trim().isEmpty()) {
+      return failed(this).feedback("insecure-deserialization.empty-input").build();
+    }
+    
+    try (ObjectInputStream ois = new SerializationHelper.ValidatingObjectInputStream(
+        new ByteArrayInputStream(Base64.getDecoder().decode(b64token)))) {
       before = System.currentTimeMillis();
       Object o = ois.readObject();
       if (!(o instanceof VulnerableTaskHolder)) {

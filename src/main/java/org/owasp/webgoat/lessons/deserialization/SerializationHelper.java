@@ -14,11 +14,34 @@ public class SerializationHelper {
   private static final char[] hexArray = "0123456789ABCDEF".toCharArray();
 
   public static Object fromString(String s) throws IOException, ClassNotFoundException {
+    if (s == null || s.trim().isEmpty()) {
+      throw new IllegalArgumentException("Input string cannot be null or empty");
+    }
     byte[] data = Base64.getDecoder().decode(s);
-    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
-    Object o = ois.readObject();
-    ois.close();
-    return o;
+    try (ObjectInputStream ois = new ValidatingObjectInputStream(new ByteArrayInputStream(data))) {
+      return ois.readObject();
+    }
+  }
+
+  private static class ValidatingObjectInputStream extends ObjectInputStream {
+    private static final Set<String> ALLOWED_CLASSES = Set.of(
+      "org.dummy.insecure.framework.VulnerableTaskHolder",
+      "java.lang.String",
+      "java.util.Date"
+      // Add other allowed classes as needed
+    );
+
+    public ValidatingObjectInputStream(InputStream in) throws IOException {
+      super(in);
+    }
+
+    @Override
+    protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+      if (!ALLOWED_CLASSES.contains(desc.getName())) {
+        throw new InvalidClassException("Unauthorized deserialization attempt", desc.getName());
+      }
+      return super.resolveClass(desc);
+    }
   }
 
   public static String toString(Serializable o) throws IOException {
