@@ -13,21 +13,62 @@ public class SerializationHelper {
 
   private static final char[] hexArray = "0123456789ABCDEF".toCharArray();
 
+  private static final int MAX_BYTES = 8192; // 8KB limit
+  
   public static Object fromString(String s) throws IOException, ClassNotFoundException {
+    if (s == null || s.trim().isEmpty()) {
+      throw new IllegalArgumentException("Input string cannot be null or empty");
+    }
+    
     byte[] data = Base64.getDecoder().decode(s);
-    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
-    Object o = ois.readObject();
-    ois.close();
-    return o;
+    if (data.length > MAX_BYTES) {
+      throw new IllegalArgumentException("Input exceeds maximum allowed size");
+    }
+    
+    try (ValidatingObjectInputStream ois = new ValidatingObjectInputStream(new ByteArrayInputStream(data))) {
+      Object obj = ois.readObject();
+      if (obj == null) {
+        throw new IllegalArgumentException("Deserialized object cannot be null");
+      }
+      return obj;
+    }
+  }
+
+  private static class ValidatingObjectInputStream extends ObjectInputStream {
+    private static final Set<String> ALLOWED_CLASSES = Set.of(
+      "org.dummy.insecure.framework.VulnerableTaskHolder",
+      "java.lang.String",
+      "java.util.Date"
+      // Add other allowed classes as needed
+    );
+
+    public ValidatingObjectInputStream(InputStream in) throws IOException {
+      super(in);
+    }
+
+    @Override
+    protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+      if (!ALLOWED_CLASSES.contains(desc.getName())) {
+        throw new InvalidClassException("Unauthorized deserialization attempt", desc.getName());
+      }
+      return super.resolveClass(desc);
+    }
   }
 
   public static String toString(Serializable o) throws IOException {
+    if (o == null) {
+      throw new IllegalArgumentException("Input object cannot be null");
+    }
 
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    ObjectOutputStream oos = new ObjectOutputStream(baos);
-    oos.writeObject(o);
-    oos.close();
-    return Base64.getEncoder().encodeToString(baos.toByteArray());
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+      oos.writeObject(o);
+      byte[] bytes = baos.toByteArray();
+      if (bytes.length > MAX_BYTES) {
+        throw new IllegalArgumentException("Serialized object exceeds maximum allowed size");
+      }
+      return Base64.getEncoder().encodeToString(bytes);
+    }
   }
 
   public static String show() throws IOException {
