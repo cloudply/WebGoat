@@ -25,6 +25,7 @@ package org.owasp.webgoat.lessons.deserialization;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InvalidClassException;
+import org.apache.commons.io.serialization.ValidatingObjectInputStream;
 import java.io.ObjectInputStream;
 import java.util.Base64;
 import org.dummy.insecure.framework.VulnerableTaskHolder;
@@ -54,8 +55,9 @@ public class InsecureDeserializationTask extends AssignmentEndpoint {
 
     b64token = token.replace('-', '+').replace('_', '/');
 
-    try (ObjectInputStream ois =
-        new ObjectInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(b64token)))) {
+    try (ValidatingObjectInputStream ois =
+        new ValidatingObjectInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(b64token)))) {
+      ois.accept("org.dummy.insecure.framework.VulnerableTaskHolder");
       before = System.currentTimeMillis();
       Object o = ois.readObject();
       if (!(o instanceof VulnerableTaskHolder)) {

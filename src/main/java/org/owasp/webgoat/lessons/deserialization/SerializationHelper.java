@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import org.apache.commons.io.serialization.ValidatingObjectInputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
@@ -15,7 +16,8 @@ public class SerializationHelper {
 
   public static Object fromString(String s) throws IOException, ClassNotFoundException {
     byte[] data = Base64.getDecoder().decode(s);
-    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
+    ValidatingObjectInputStream ois = new ValidatingObjectInputStream(new ByteArrayInputStream(data));
+    ois.accept("org.dummy.insecure.framework.VulnerableTaskHolder"); // Whitelist allowed class
     Object o = ois.readObject();
     ois.close();
     return o;
