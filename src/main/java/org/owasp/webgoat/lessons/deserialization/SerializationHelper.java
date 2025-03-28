@@ -13,21 +13,34 @@ public class SerializationHelper {
 
   private static final char[] hexArray = "0123456789ABCDEF".toCharArray();
 
+  private static final int MAX_SERIALIZED_SIZE = 1024 * 1024; // 1MB limit
+
   public static Object fromString(String s) throws IOException, ClassNotFoundException {
+    if (s == null || s.isEmpty()) {
+      throw new IllegalArgumentException("Input string cannot be null or empty");
+    }
     byte[] data = Base64.getDecoder().decode(s);
-    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
-    Object o = ois.readObject();
-    ois.close();
-    return o;
+    if (data.length > MAX_SERIALIZED_SIZE) {
+      throw new IllegalArgumentException("Serialized data size exceeds limit");
+    }
+    try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data))) {
+      return ois.readObject();
+    }
   }
 
   public static String toString(Serializable o) throws IOException {
-
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    ObjectOutputStream oos = new ObjectOutputStream(baos);
-    oos.writeObject(o);
-    oos.close();
-    return Base64.getEncoder().encodeToString(baos.toByteArray());
+    if (o == null) {
+      throw new IllegalArgumentException("Input object cannot be null");
+    }
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+      oos.writeObject(o);
+      byte[] data = baos.toByteArray();
+      if (data.length > MAX_SERIALIZED_SIZE) {
+        throw new IllegalArgumentException("Serialized data size exceeds limit");
+      }
+      return Base64.getEncoder().encodeToString(data);
+    }
   }
 
   public static String show() throws IOException {
