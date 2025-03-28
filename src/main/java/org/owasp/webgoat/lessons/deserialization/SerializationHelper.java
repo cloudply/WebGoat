@@ -1,24 +1,35 @@
 package org.owasp.webgoat.lessons.deserialization;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.util.Base64;
 
 public class SerializationHelper {
 
   private static final char[] hexArray = "0123456789ABCDEF".toCharArray();
 
+  private static class SafeObjectInputStream extends ObjectInputStream {
+    public SafeObjectInputStream(InputStream in) throws IOException {
+      super(in);
+    }
+    
+    @Override
+    protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+      // Only allow classes from our package
+      if (!desc.getName().startsWith("org.owasp.webgoat")) {
+        throw new InvalidClassException("Unauthorized deserialization attempt", desc.getName());
+      }
+      return super.resolveClass(desc);
+    }
+  }
+
   public static Object fromString(String s) throws IOException, ClassNotFoundException {
+    if (s == null || s.trim().isEmpty()) {
+      throw new IllegalArgumentException("Input string cannot be null or empty");
+    }
     byte[] data = Base64.getDecoder().decode(s);
-    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
-    Object o = ois.readObject();
-    ois.close();
-    return o;
+    try (SafeObjectInputStream ois = new SafeObjectInputStream(new ByteArrayInputStream(data))) {
+      return ois.readObject();
+    }
   }
 
   public static String toString(Serializable o) throws IOException {
