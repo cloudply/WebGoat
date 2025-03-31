@@ -15,18 +15,27 @@ public class SerializationHelper {
 
   public static Object fromString(String s) throws IOException, ClassNotFoundException {
     byte[] data = Base64.getDecoder().decode(s);
-    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
-    Object o = ois.readObject();
-    ois.close();
+    try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data))) {
+        if (data.length > 10_000_000) { // 10MB limit
+            throw new IOException("Serialized data too large");
+        }
+        Object o = ois.readObject();
+        return o;
+    }
     return o;
   }
 
   public static String toString(Serializable o) throws IOException {
 
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    ObjectOutputStream oos = new ObjectOutputStream(baos);
-    oos.writeObject(o);
-    oos.close();
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+        oos.writeObject(o);
+        byte[] bytes = baos.toByteArray();
+        if (bytes.length > 10_000_000) { // 10MB limit
+            throw new IOException("Serialized data too large"); 
+        }
+        return Base64.getEncoder().encodeToString(bytes);
+    }
     return Base64.getEncoder().encodeToString(baos.toByteArray());
   }
 
