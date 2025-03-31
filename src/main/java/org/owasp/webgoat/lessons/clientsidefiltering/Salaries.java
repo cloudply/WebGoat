@@ -76,6 +76,9 @@ public class Salaries {
     NodeList nodes = null;
     File d = new File(webGoatHomeDirectory, "ClientSideFiltering/employees.xml");
     XPathFactory factory = XPathFactory.newInstance();
+    // Configure to prevent XXE attacks
+    System.setProperty("javax.xml.xpath.XPathFactory:" + XPathFactory.DEFAULT_OBJECT_MODEL_URI,
+        "com.sun.org.apache.xpath.internal.jaxp.XPathFactoryImpl");
     XPath path = factory.newXPath();
     int columns = 5;
     List<Map<String, Object>> json = new ArrayList<>();
