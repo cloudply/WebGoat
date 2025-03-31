@@ -87,21 +87,29 @@ public class BlindSendFileAssignment extends AssignmentEndpoint {
   public AttackResult addComment(@RequestBody String commentStr) {
     var fileContentsForUser = userToFileContents.getOrDefault(getWebSession().getUser(), "");
 
-    // Solution is posted by the user as a separate comment
-    if (commentStr.contains(fileContentsForUser)) {
-      return success(this).build();
-    }
-
     try {
-      Comment comment = comments.parseXml(commentStr);
-      if (fileContentsForUser.contains(comment.getText())) {
-        comment.setText("Nice try, you need to send the file to WebWolf");
+      // First check if this is the solution being posted back
+      if (commentStr.contains(fileContentsForUser)) {
+        return success(this).build();
       }
+
+      // Parse the XML comment
+      Comment comment = comments.parseXml(commentStr);
+      
+      // Check if the comment text contains the secret file contents
+      if (comment.getText() != null && comment.getText().contains(fileContentsForUser)) {
+        comment.setText("Nice try, you need to send the file to WebWolf");
+        comments.addComment(comment, false);
+        return failed(this).feedback("xxe.blind.feedback.try-again").build();
+      }
+
+      // Normal comment
       comments.addComment(comment, false);
+      return failed(this).feedback("xxe.blind.feedback.missing-payload").build();
+
     } catch (Exception e) {
       return failed(this).output(e.toString()).build();
     }
-    return failed(this).build();
   }
 
   @Override
