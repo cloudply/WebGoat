@@ -73,34 +73,30 @@ public class Salaries {
   @GetMapping("clientSideFiltering/salaries")
   @ResponseBody
   public List<Map<String, Object>> invoke() {
-    NodeList nodes = null;
+    List<Map<String, Object>> json = new ArrayList<>();
     File d = new File(webGoatHomeDirectory, "ClientSideFiltering/employees.xml");
     XPathFactory factory = XPathFactory.newInstance();
-    XPath path = factory.newXPath();
-    int columns = 5;
-    List<Map<String, Object>> json = new ArrayList<>();
-    java.util.Map<String, Object> employeeJson = new HashMap<>();
+    XPath xpath = factory.newXPath();
 
     try (InputStream is = new FileInputStream(d)) {
       InputSource inputSource = new InputSource(is);
-
-      StringBuilder sb = new StringBuilder();
-
-      sb.append("/Employees/Employee/UserID | ");
-      sb.append("/Employees/Employee/FirstName | ");
-      sb.append("/Employees/Employee/LastName | ");
-      sb.append("/Employees/Employee/SSN | ");
-      sb.append("/Employees/Employee/Salary ");
-
-      String expression = sb.toString();
-      nodes = (NodeList) path.evaluate(expression, inputSource, XPathConstants.NODESET);
-      for (int i = 0; i < nodes.getLength(); i++) {
-        if (i % columns == 0) {
-          employeeJson = new HashMap<>();
-          json.add(employeeJson);
-        }
-        Node node = nodes.item(i);
-        employeeJson.put(node.getNodeName(), node.getTextContent());
+      
+      // Get all Employee nodes
+      NodeList employees = (NodeList) xpath.evaluate("/Employees/Employee", inputSource, XPathConstants.NODESET);
+      
+      // Process each employee
+      for (int i = 0; i < employees.getLength(); i++) {
+        Node employee = employees.item(i);
+        Map<String, Object> employeeJson = new HashMap<>();
+        
+        // Extract each field using relative paths
+        employeeJson.put("UserID", xpath.evaluate("UserID", employee));
+        employeeJson.put("FirstName", xpath.evaluate("FirstName", employee));
+        employeeJson.put("LastName", xpath.evaluate("LastName", employee));
+        employeeJson.put("SSN", xpath.evaluate("SSN", employee));
+        employeeJson.put("Salary", xpath.evaluate("Salary", employee));
+        
+        json.add(employeeJson);
       }
     } catch (XPathExpressionException e) {
       log.error("Unable to parse xml", e);
