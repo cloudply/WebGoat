@@ -58,9 +58,13 @@ public class Assignment7Test extends AssignmentEndpointTest {
   @Value("${webwolf.mail.url}")
   String webWolfMailURL;
 
+  @Value("${webgoat.challenge7.admin.password.link}")
+  private String adminPasswordLink;
+
   @BeforeEach
   void setup() {
     Assignment7 assignment7 = new Assignment7(new Flags(), restTemplate, webWolfMailURL);
+    assignment7.setAdminPasswordLink(adminPasswordLink);
     init(assignment7);
     mockMvc = standaloneSetup(assignment7).build();
   }
@@ -75,7 +79,7 @@ public class Assignment7Test extends AssignmentEndpointTest {
     result =
         mockMvc.perform(
             MockMvcRequestBuilders.get(
-                RESET_PASSWORD_PATH + "/" + Assignment7.ADMIN_PASSWORD_LINK));
+                RESET_PASSWORD_PATH + "/" + adminPasswordLink));
     result.andExpect(status().is(equalTo(HttpStatus.ACCEPTED.value())));
   }
 

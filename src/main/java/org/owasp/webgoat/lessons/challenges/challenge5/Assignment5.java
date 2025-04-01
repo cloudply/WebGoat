@@ -41,6 +41,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class Assignment5 extends AssignmentEndpoint {
 
+  private static final String VALID_USER = "Larry";
+  private static final int MAX_INPUT_LENGTH = 100;
+  
   private final LessonDataSource dataSource;
   private final Flags flags;
 
@@ -48,26 +51,26 @@ public class Assignment5 extends AssignmentEndpoint {
   @ResponseBody
   public AttackResult login(
       @RequestParam String username_login, @RequestParam String password_login) throws Exception {
-    if (!StringUtils.hasText(username_login) || !StringUtils.hasText(password_login)) {
+    if (!StringUtils.hasText(username_login) || !StringUtils.hasText(password_login) ||
+        username_login.length() > MAX_INPUT_LENGTH || password_login.length() > MAX_INPUT_LENGTH) {
       return failed(this).feedback("required4").build();
     }
-    if (!"Larry".equals(username_login)) {
+    if (!VALID_USER.equals(username_login)) {
       return failed(this).feedback("user.not.larry").feedbackArgs(username_login).build();
     }
-    try (var connection = dataSource.getConnection()) {
-      PreparedStatement statement =
-          connection.prepareStatement(
-              "select password from challenge_users where userid = '"
-                  + username_login
-                  + "' and password = '"
-                  + password_login
-                  + "'");
-      ResultSet resultSet = statement.executeQuery();
-
-      if (resultSet.next()) {
-        return success(this).feedback("challenge.solved").feedbackArgs(flags.getFlag(5)).build();
-      } else {
-        return failed(this).feedback("challenge.close").build();
+    try (var connection = dataSource.getConnection();
+         var statement = connection.prepareStatement(
+             "SELECT password FROM challenge_users WHERE userid = ? AND password = ? AND userid = 'Larry'");
+         ) {
+      statement.setString(1, username_login);
+      statement.setString(2, password_login);
+      
+      try (var resultSet = statement.executeQuery()) {
+        if (resultSet.next()) {
+          return success(this).feedback("challenge.solved").feedbackArgs(flags.getFlag(5)).build();
+        } else {
+          return failed(this).feedback("challenge.close").build();
+        }
       }
     }
   }
