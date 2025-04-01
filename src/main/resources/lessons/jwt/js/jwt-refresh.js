@@ -8,12 +8,10 @@ function login(user) {
         url: 'JWT/refresh/login',
         contentType: "application/json",
         data: JSON.stringify({user: user, password: "bm5nhSkxCXZkKRy4"})
-    }).success(
-        function (response) {
-            localStorage.setItem('access_token', response['access_token']);
-            localStorage.setItem('refresh_token', response['refresh_token']);
-        }
-    )
+    }).done(function (response) {
+        localStorage.setItem('access_token', response['access_token']);
+        localStorage.setItem('refresh_token', response['refresh_token']);
+    })
 }
 
 //Dev comment: Pass token as header as we had an issue with tokens ending up in the access_log
@@ -33,10 +31,8 @@ function newToken() {
         type: 'POST',
         url: 'JWT/refresh/newToken',
         data: JSON.stringify({refreshToken: localStorage.getItem('refresh_token')})
-    }).success(
-        function () {
-            localStorage.setItem('access_token', apiToken);
-            localStorage.setItem('refresh_token', refreshToken);
-        }
-    )
+    }).done(function () {
+        localStorage.setItem('access_token', apiToken);
+        localStorage.setItem('refresh_token', refreshToken);
+    })
 }
