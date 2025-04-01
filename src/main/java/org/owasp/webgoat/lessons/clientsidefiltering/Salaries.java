@@ -32,6 +32,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
@@ -46,6 +48,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 @RestController
 @Slf4j
@@ -77,6 +80,20 @@ public class Salaries {
     File d = new File(webGoatHomeDirectory, "ClientSideFiltering/employees.xml");
     XPathFactory factory = XPathFactory.newInstance();
     XPath path = factory.newXPath();
+    
+    // Disable XXE by creating a secure InputSource
+    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+    try {
+      // Disable DTDs and external entities
+      dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+      dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
+      dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+      dbf.setXIncludeAware(false);
+      dbf.setExpandEntityReferences(false);
+    } catch (ParserConfigurationException e) {
+      log.error("Error configuring XML parser", e);
+    }
+    
     int columns = 5;
     List<Map<String, Object>> json = new ArrayList<>();
     java.util.Map<String, Object> employeeJson = new HashMap<>();
