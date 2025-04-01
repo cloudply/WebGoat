@@ -46,24 +46,46 @@ public class SSRFTask2 extends AssignmentEndpoint {
   }
 
   protected AttackResult furBall(String url) {
-    if (url.matches("http://ifconfig\\.pro")) {
-      String html;
-      try (InputStream in = new URL(url).openStream()) {
-        html =
-            new String(in.readAllBytes(), StandardCharsets.UTF_8)
-                .replaceAll("\n", "<br>"); // Otherwise the \n gets escaped in the response
-      } catch (MalformedURLException e) {
-        return getFailedResult(e.getMessage());
-      } catch (IOException e) {
-        // in case the external site is down, the test and lesson should still be ok
-        html =
-            "<html><body>Although the http://ifconfig.pro site is down, you still managed to solve"
-                + " this exercise the right way!</body></html>";
-      }
-      return success(this).feedback("ssrf.success").output(html).build();
+    // Strict URL validation
+    if (!isValidUrl(url)) {
+      return getFailedResult("Invalid URL format");
     }
-    var html = "<img class=\"image\" alt=\"image post\" src=\"images/cat.jpg\">";
-    return getFailedResult(html);
+
+    // Whitelist check
+    if (!url.equals("http://ifconfig.pro")) {
+      return getFailedResult("Only http://ifconfig.pro is allowed");
+    }
+
+    String html;
+    try {
+      URL targetUrl = new URL(url);
+      // Additional security checks
+      if (!targetUrl.getHost().equals("ifconfig.pro") || 
+          !targetUrl.getProtocol().equals("http")) {
+        return getFailedResult("Invalid target host or protocol");
+      }
+
+      try (InputStream in = targetUrl.openStream()) {
+        html = new String(in.readAllBytes(), StandardCharsets.UTF_8)
+                .replaceAll("\n", "<br>"); // Otherwise the \n gets escaped in the response
+      }
+    } catch (MalformedURLException e) {
+      return getFailedResult("Malformed URL: " + e.getMessage());
+    } catch (IOException e) {
+      // in case the external site is down, the test and lesson should still be ok
+      html = "<html><body>Although the http://ifconfig.pro site is down, you still managed to solve"
+             + " this exercise the right way!</body></html>";
+    }
+    return success(this).feedback("ssrf.success").output(html).build();
+  }
+
+  private boolean isValidUrl(String url) {
+    try {
+      new URL(url);
+      return true;
+    } catch (MalformedURLException e) {
+      return false;
+    }
   }
 
   private AttackResult getFailedResult(String errorMsg) {
