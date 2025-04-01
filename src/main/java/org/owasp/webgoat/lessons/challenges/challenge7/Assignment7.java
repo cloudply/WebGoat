@@ -58,7 +58,7 @@ public class Assignment7 extends AssignmentEndpoint {
   @GetMapping("/challenge/7/reset-password/{link}")
   public ResponseEntity<String> resetPassword(@PathVariable(value = "link") String link) {
     if (link.equals(ADMIN_PASSWORD_LINK)) {
-      return ResponseEntity.accepted()
+      return ResponseEntity.status(HttpStatus.ACCEPTED)
           .body(
               "<h1>Success!!</h1>"
                   + "<img src='/WebGoat/images/hi-five-cat.jpg'>"
