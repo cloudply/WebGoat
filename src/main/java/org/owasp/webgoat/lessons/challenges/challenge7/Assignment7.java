@@ -31,6 +31,9 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class Assignment7 extends AssignmentEndpoint {
 
+  @Value("${webgoat.challenge7.admin.password.link}")
+  private String adminPasswordLink;
+  
   public static final String ADMIN_PASSWORD_LINK = "375afe1104f4a487a73823c50a9292a2";
 
   private static final String TEMPLATE =
@@ -57,7 +60,7 @@ public class Assignment7 extends AssignmentEndpoint {
 
   @GetMapping("/challenge/7/reset-password/{link}")
   public ResponseEntity<String> resetPassword(@PathVariable(value = "link") String link) {
-    if (link.equals(ADMIN_PASSWORD_LINK)) {
+    if (link.equals(adminPasswordLink)) {
       return ResponseEntity.accepted()
           .body(
               "<h1>Success!!</h1>"

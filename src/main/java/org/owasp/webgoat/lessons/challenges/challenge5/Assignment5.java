@@ -24,9 +24,13 @@ package org.owasp.webgoat.lessons.challenges.challenge5;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.webgoat.container.LessonDataSource;
+import org.springframework.security.crypto.codec.Hex;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AttackResult;
 import org.owasp.webgoat.lessons.challenges.Flags;
@@ -55,20 +59,36 @@ public class Assignment5 extends AssignmentEndpoint {
       return failed(this).feedback("user.not.larry").feedbackArgs(username_login).build();
     }
     try (var connection = dataSource.getConnection()) {
+      // First get the stored hash
       PreparedStatement statement =
-          connection.prepareStatement(
-              "select password from challenge_users where userid = '"
-                  + username_login
-                  + "' and password = '"
-                  + password_login
-                  + "'");
+          connection.prepareStatement("select password from challenge_users where userid = ?");
+      statement.setString(1, username_login);
       ResultSet resultSet = statement.executeQuery();
 
       if (resultSet.next()) {
-        return success(this).feedback("challenge.solved").feedbackArgs(flags.getFlag(5)).build();
-      } else {
-        return failed(this).feedback("challenge.close").build();
+        String storedHash = resultSet.getString(1);
+        String providedHash = hashPassword(password_login);
+        
+        // Use constant time comparison
+        if (MessageDigest.isEqual(
+            storedHash.getBytes(StandardCharsets.UTF_8),
+            providedHash.getBytes(StandardCharsets.UTF_8))) {
+          log.info("Successful login attempt for user: {}", username_login);
+          return success(this).feedback("challenge.solved").feedbackArgs(flags.getFlag(5)).build();
+        }
       }
+      log.warn("Failed login attempt for user: {}", username_login);
+      return failed(this).feedback("challenge.close").build();
+    }
+  }
+
+  private String hashPassword(String password) {
+    try {
+      MessageDigest digest = MessageDigest.getInstance("SHA-256");
+      byte[] hash = digest.digest(password.getBytes(StandardCharsets.UTF_8));
+      return new String(Hex.encode(hash));
+    } catch (NoSuchAlgorithmException e) {
+      throw new RuntimeException("Failed to hash password", e);
     }
   }
 }

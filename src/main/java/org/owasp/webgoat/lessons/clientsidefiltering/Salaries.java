@@ -36,6 +36,7 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+import javax.xml.xpath.XPathFactoryConfigurationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -76,7 +77,14 @@ public class Salaries {
     NodeList nodes = null;
     File d = new File(webGoatHomeDirectory, "ClientSideFiltering/employees.xml");
     XPathFactory factory = XPathFactory.newInstance();
-    XPath path = factory.newXPath();
+    XPath path;
+    try {
+        factory.setFeature("http://javax.xml.XMLConstants/feature/secure-processing", true);
+        path = factory.newXPath();
+    } catch (XPathFactoryConfigurationException e) {
+        log.error("Unable to configure XPath factory", e);
+        return new ArrayList<>();
+    }
     int columns = 5;
     List<Map<String, Object>> json = new ArrayList<>();
     java.util.Map<String, Object> employeeJson = new HashMap<>();
