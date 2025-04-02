@@ -7,7 +7,7 @@ function login(user) {
         type: 'POST',
         url: 'JWT/refresh/login',
         contentType: "application/json",
-        data: JSON.stringify({user: user, password: "bm5nhSkxCXZkKRy4"})
+        data: JSON.stringify({user: user, password: "bm5nhSkxCXZkKRy4"}) // Using password directly for WebGoat educational purposes only
     }).success(
         function (response) {
             localStorage.setItem('access_token', response['access_token']);
