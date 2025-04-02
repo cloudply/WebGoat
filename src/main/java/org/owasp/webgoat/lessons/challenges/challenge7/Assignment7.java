@@ -31,7 +31,8 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class Assignment7 extends AssignmentEndpoint {
 
-  public static final String ADMIN_PASSWORD_LINK = "375afe1104f4a487a73823c50a9292a2";
+  public static String ADMIN_PASSWORD_LINK;
+  private final String adminPasswordLink;
 
   private static final String TEMPLATE =
       "Hi, you requested a password reset link, please use this <a target='_blank'"
@@ -49,15 +50,18 @@ public class Assignment7 extends AssignmentEndpoint {
   private final String webWolfMailURL;
 
   public Assignment7(
-      Flags flags, RestTemplate restTemplate, @Value("${webwolf.mail.url}") String webWolfMailURL) {
+      Flags flags, RestTemplate restTemplate, @Value("${webwolf.mail.url}") String webWolfMailURL,
+      @Value("${webgoat.admin.password.link:#{environment.ADMIN_PASSWORD_LINK}}") String adminPasswordLink) {
     this.flags = flags;
     this.restTemplate = restTemplate;
     this.webWolfMailURL = webWolfMailURL;
+    this.adminPasswordLink = adminPasswordLink;
+    ADMIN_PASSWORD_LINK = adminPasswordLink;
   }
 
   @GetMapping("/challenge/7/reset-password/{link}")
   public ResponseEntity<String> resetPassword(@PathVariable(value = "link") String link) {
-    if (link.equals(ADMIN_PASSWORD_LINK)) {
+    if (link.equals(adminPasswordLink)) {
       return ResponseEntity.accepted()
           .body(
               "<h1>Success!!</h1>"
