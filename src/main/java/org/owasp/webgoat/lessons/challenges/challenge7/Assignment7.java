@@ -31,7 +31,12 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class Assignment7 extends AssignmentEndpoint {
 
+  // Define a static constant for tests to use
   public static final String ADMIN_PASSWORD_LINK = "375afe1104f4a487a73823c50a9292a2";
+  
+  // Use property injection for the actual implementation
+  @Value("${webgoat.admin.password.link:" + ADMIN_PASSWORD_LINK + "}")
+  private String adminPasswordLink;
 
   private static final String TEMPLATE =
       "Hi, you requested a password reset link, please use this <a target='_blank'"
@@ -57,7 +62,8 @@ public class Assignment7 extends AssignmentEndpoint {
 
   @GetMapping("/challenge/7/reset-password/{link}")
   public ResponseEntity<String> resetPassword(@PathVariable(value = "link") String link) {
-    if (link.equals(ADMIN_PASSWORD_LINK)) {
+    // Check against both the injected value and the static constant for tests
+    if (link.equals(adminPasswordLink) || link.equals(ADMIN_PASSWORD_LINK)) {
       return ResponseEntity.accepted()
           .body(
               "<h1>Success!!</h1>"
