@@ -39,6 +39,8 @@ import org.springframework.web.bind.annotation.RestController;
 @AssignmentHints({"ssrf.hint3"})
 public class SSRFTask2 extends AssignmentEndpoint {
 
+  private static final String ALLOWED_URL = "http://ifconfig.pro";
+
   @PostMapping("/SSRF/task2")
   @ResponseBody
   public AttackResult completed(@RequestParam String url) {
@@ -46,9 +48,9 @@ public class SSRFTask2 extends AssignmentEndpoint {
   }
 
   protected AttackResult furBall(String url) {
-    if (url.matches("http://ifconfig\\.pro")) {
+    if (url.equals(ALLOWED_URL)) {
       String html;
-      try (InputStream in = new URL(url).openStream()) {
+      try (InputStream in = new URL(ALLOWED_URL).openStream()) {
         html =
             new String(in.readAllBytes(), StandardCharsets.UTF_8)
                 .replaceAll("\n", "<br>"); // Otherwise the \n gets escaped in the response
