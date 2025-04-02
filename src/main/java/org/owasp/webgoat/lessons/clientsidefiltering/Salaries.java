@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.xml.XMLConstants;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
@@ -76,6 +77,11 @@ public class Salaries {
     NodeList nodes = null;
     File d = new File(webGoatHomeDirectory, "ClientSideFiltering/employees.xml");
     XPathFactory factory = XPathFactory.newInstance();
+    try {
+      factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+    } catch (Exception e) {
+      log.error("Error setting secure XML processing", e);
+    }
     XPath path = factory.newXPath();
     int columns = 5;
     List<Map<String, Object>> json = new ArrayList<>();
