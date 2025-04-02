@@ -52,6 +52,9 @@ public class Assignment7Test extends AssignmentEndpointTest {
   private static final String CHALLENGE_PATH = "/challenge/7";
   private static final String RESET_PASSWORD_PATH = CHALLENGE_PATH + "/reset-password";
   private static final String GIT_PATH = CHALLENGE_PATH + "/.git";
+  
+  // Add a test admin password link for testing purposes
+  private static final String TEST_ADMIN_PASSWORD_LINK = "test-admin-link";
 
   @Mock private RestTemplate restTemplate;
 
@@ -61,6 +64,14 @@ public class Assignment7Test extends AssignmentEndpointTest {
   @BeforeEach
   void setup() {
     Assignment7 assignment7 = new Assignment7(new Flags(), restTemplate, webWolfMailURL);
+    // Use reflection to set the adminPasswordLink field for testing
+    try {
+      java.lang.reflect.Field field = Assignment7.class.getDeclaredField("adminPasswordLink");
+      field.setAccessible(true);
+      field.set(assignment7, TEST_ADMIN_PASSWORD_LINK);
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to set adminPasswordLink field", e);
+    }
     init(assignment7);
     mockMvc = standaloneSetup(assignment7).build();
   }
@@ -75,7 +86,7 @@ public class Assignment7Test extends AssignmentEndpointTest {
     result =
         mockMvc.perform(
             MockMvcRequestBuilders.get(
-                RESET_PASSWORD_PATH + "/" + Assignment7.ADMIN_PASSWORD_LINK));
+                RESET_PASSWORD_PATH + "/" + TEST_ADMIN_PASSWORD_LINK));
     result.andExpect(status().is(equalTo(HttpStatus.ACCEPTED.value())));
   }
 
