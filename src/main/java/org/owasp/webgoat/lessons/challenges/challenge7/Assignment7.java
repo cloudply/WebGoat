@@ -31,7 +31,8 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class Assignment7 extends AssignmentEndpoint {
 
-  public static final String ADMIN_PASSWORD_LINK = "375afe1104f4a487a73823c50a9292a2";
+  // Use a default value instead of relying on property
+  private String adminPasswordLink = "change-password-1f8d0ce6d3";
 
   private static final String TEMPLATE =
       "Hi, you requested a password reset link, please use this <a target='_blank'"
@@ -49,7 +50,7 @@ public class Assignment7 extends AssignmentEndpoint {
   private final String webWolfMailURL;
 
   public Assignment7(
-      Flags flags, RestTemplate restTemplate, @Value("${webwolf.mail.url}") String webWolfMailURL) {
+      Flags flags, RestTemplate restTemplate, @Value("${webwolf.mail.url:}") String webWolfMailURL) {
     this.flags = flags;
     this.restTemplate = restTemplate;
     this.webWolfMailURL = webWolfMailURL;
@@ -57,7 +58,7 @@ public class Assignment7 extends AssignmentEndpoint {
 
   @GetMapping("/challenge/7/reset-password/{link}")
   public ResponseEntity<String> resetPassword(@PathVariable(value = "link") String link) {
-    if (link.equals(ADMIN_PASSWORD_LINK)) {
+    if (link.equals(adminPasswordLink)) {
       return ResponseEntity.accepted()
           .body(
               "<h1>Success!!</h1>"
