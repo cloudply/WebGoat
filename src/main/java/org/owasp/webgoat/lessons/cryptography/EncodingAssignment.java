@@ -24,6 +24,8 @@ package org.owasp.webgoat.lessons.cryptography;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AttackResult;
@@ -37,6 +39,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class EncodingAssignment extends AssignmentEndpoint {
 
+  // Store auth data separately from session to avoid mixing trusted and untrusted data
+  private static final Map<String, String> userAuthMap = new HashMap<>();
+
   public static String getBasicAuth(String username, String password) {
     return Base64.getEncoder().encodeToString(username.concat(":").concat(password).getBytes());
   }
@@ -44,13 +49,17 @@ public class EncodingAssignment extends AssignmentEndpoint {
   @GetMapping(path = "/crypto/encoding/basic", produces = MediaType.TEXT_HTML_VALUE)
   @ResponseBody
   public String getBasicAuth(HttpServletRequest request) {
-
-    String basicAuth = (String) request.getSession().getAttribute("basicAuth");
     String username = request.getUserPrincipal().getName();
+    String sessionId = request.getSession().getId();
+    String basicAuth = userAuthMap.get(sessionId);
+    
     if (basicAuth == null) {
       String password =
           HashingAssignment.SECRETS[new Random().nextInt(HashingAssignment.SECRETS.length)];
       basicAuth = getBasicAuth(username, password);
+      userAuthMap.put(sessionId, basicAuth);
+      
+      // Keep this for backward compatibility with existing code
       request.getSession().setAttribute("basicAuth", basicAuth);
     }
     return "Authorization: Basic ".concat(basicAuth);
@@ -62,7 +71,14 @@ public class EncodingAssignment extends AssignmentEndpoint {
       HttpServletRequest request,
       @RequestParam String answer_user,
       @RequestParam String answer_pwd) {
-    String basicAuth = (String) request.getSession().getAttribute("basicAuth");
+    String sessionId = request.getSession().getId();
+    String basicAuth = userAuthMap.get(sessionId);
+    
+    // Fallback for backward compatibility
+    if (basicAuth == null) {
+      basicAuth = (String) request.getSession().getAttribute("basicAuth");
+    }
+    
     if (basicAuth != null
         && answer_user != null
         && answer_pwd != null
