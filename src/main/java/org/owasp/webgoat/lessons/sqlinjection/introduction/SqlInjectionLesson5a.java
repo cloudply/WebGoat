@@ -59,6 +59,12 @@ public class SqlInjectionLesson5a extends AssignmentEndpoint {
   protected AttackResult injectableQuery(String accountName) {
     String query = "";
     try (Connection connection = dataSource.getConnection()) {
+      // NOTE: This code is intentionally vulnerable to SQL injection for educational purposes.
+      // In a real application, you should use a prepared statement with parameters like this:
+      // String safeQuery = "SELECT * FROM user_data WHERE first_name = 'John' and last_name = ?";
+      // PreparedStatement statement = connection.prepareStatement(safeQuery, 
+      //     ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+      // statement.setString(1, accountName);
       query =
           "SELECT * FROM user_data WHERE first_name = 'John' and last_name = '" + accountName + "'";
       try (Statement statement =
