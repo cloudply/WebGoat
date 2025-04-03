@@ -3,7 +3,19 @@ var dataFetched = false;
 function selectUser() {
 
     var newEmployeeID = $("#UserSelect").val();
-    document.getElementById("employeeRecord").innerHTML = document.getElementById(newEmployeeID).innerHTML;
+    // Use a safer approach that still allows HTML rendering
+    // Create a new element, copy the content, and sanitize it before insertion
+    var sourceElement = document.getElementById(newEmployeeID);
+    var targetElement = document.getElementById("employeeRecord");
+    
+    if (sourceElement && targetElement) {
+        // Clone the content instead of using innerHTML directly
+        targetElement.innerHTML = '';
+        var clone = sourceElement.cloneNode(true);
+        while (clone.firstChild) {
+            targetElement.appendChild(clone.firstChild);
+        }
+    }
 }
 
 function fetchUserData() {
