@@ -52,9 +52,13 @@ public class TokenTest {
             .signWith(io.jsonwebtoken.SignatureAlgorithm.HS512, key)
             .compact();
     log.debug(token);
-    Jwt jwt = Jwts.parser().setSigningKey("qwertyqwerty1234").parse(token);
-    jwt =
-        Jwts.parser()
+    
+    // Fix: Use parseClaimsJws to properly verify signature
+    // Store the result in a variable of the appropriate type
+    var parsedToken = Jwts.parser().setSigningKey("qwertyqwerty1234").parseClaimsJws(token);
+    
+    // Fix: Use parseClaimsJws with SigningKeyResolver
+    var parsedToken2 = Jwts.parser()
             .setSigningKeyResolver(
                 new SigningKeyResolverAdapter() {
                   @Override
@@ -62,7 +66,7 @@ public class TokenTest {
                     return TextCodec.BASE64.decode(key);
                   }
                 })
-            .parse(token);
+            .parseClaimsJws(token);
   }
 
   @Test
