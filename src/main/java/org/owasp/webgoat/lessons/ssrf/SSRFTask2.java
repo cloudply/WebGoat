@@ -39,6 +39,8 @@ import org.springframework.web.bind.annotation.RestController;
 @AssignmentHints({"ssrf.hint3"})
 public class SSRFTask2 extends AssignmentEndpoint {
 
+  private static final String ALLOWED_HOST = "ifconfig.pro";
+
   @PostMapping("/SSRF/task2")
   @ResponseBody
   public AttackResult completed(@RequestParam String url) {
@@ -48,10 +50,18 @@ public class SSRFTask2 extends AssignmentEndpoint {
   protected AttackResult furBall(String url) {
     if (url.matches("http://ifconfig\\.pro")) {
       String html;
-      try (InputStream in = new URL(url).openStream()) {
-        html =
-            new String(in.readAllBytes(), StandardCharsets.UTF_8)
-                .replaceAll("\n", "<br>"); // Otherwise the \n gets escaped in the response
+      try {
+        // Validate URL host before opening connection
+        URL urlObj = new URL(url);
+        if (!ALLOWED_HOST.equals(urlObj.getHost())) {
+          return getFailedResult("Invalid host in URL");
+        }
+        
+        try (InputStream in = urlObj.openStream()) {
+          html =
+              new String(in.readAllBytes(), StandardCharsets.UTF_8)
+                  .replaceAll("\n", "<br>"); // Otherwise the \n gets escaped in the response
+        }
       } catch (MalformedURLException e) {
         return getFailedResult(e.getMessage());
       } catch (IOException e) {
