@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.security.SecureRandom;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
@@ -61,6 +62,7 @@ public class JWTRefreshEndpoint extends AssignmentEndpoint {
   public static final String PASSWORD = "bm5nhSkxCXZkKRy4";
   private static final String JWT_PASSWORD = "bm5n3SkxCX4kKRy4";
   private static final List<String> validRefreshTokens = new ArrayList<>();
+  private static final SecureRandom secureRandom = new SecureRandom();
 
   @PostMapping(
       value = "/JWT/refresh/login",
@@ -89,7 +91,10 @@ public class JWTRefreshEndpoint extends AssignmentEndpoint {
             .signWith(io.jsonwebtoken.SignatureAlgorithm.HS512, JWT_PASSWORD)
             .compact();
     Map<String, Object> tokenJson = new HashMap<>();
-    String refreshToken = RandomStringUtils.randomAlphabetic(20);
+    
+    // Use RandomStringUtils but with a secure source of randomness
+    String refreshToken = RandomStringUtils.random(20, 0, 0, true, false, null, secureRandom);
+    
     validRefreshTokens.add(refreshToken);
     tokenJson.put("access_token", token);
     tokenJson.put("refresh_token", refreshToken);
