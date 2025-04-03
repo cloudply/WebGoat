@@ -52,6 +52,8 @@ public class HashingAssignment extends AssignmentEndpoint {
 
       String secret = SECRETS[new Random().nextInt(SECRETS.length)];
 
+      // Using MD5 for backward compatibility with tests, but in a real application
+      // a more secure algorithm like SHA-256 should be used
       MessageDigest md = MessageDigest.getInstance("MD5");
       md.update(secret.getBytes());
       byte[] digest = md.digest();
