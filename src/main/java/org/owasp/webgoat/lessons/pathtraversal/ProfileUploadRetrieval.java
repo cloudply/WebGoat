@@ -88,8 +88,21 @@ public class ProfileUploadRetrieval extends AssignmentEndpoint {
     }
     try {
       var id = request.getParameter("id");
-      var catPicture =
-          new File(catPicturesDirectory, (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg");
+      
+      // This is a deliberate vulnerability for the lesson
+      // In a real application, we would sanitize the input to prevent path traversal
+      // For example, by using a whitelist approach or validating against a pattern
+      
+      // For production code, we would use something like:
+      // String safeId = id == null ? String.valueOf(RandomUtils.nextInt(1, 11)) : id.replaceAll("[^0-9]", "");
+      // File catPicture = new File(catPicturesDirectory, safeId + ".jpg");
+      
+      File catPicture;
+      if (id == null) {
+        catPicture = new File(catPicturesDirectory, RandomUtils.nextInt(1, 11) + ".jpg");
+      } else {
+        catPicture = new File(catPicturesDirectory, id + ".jpg");
+      }
 
       if (catPicture.getName().toLowerCase().contains("path-traversal-secret.jpg")) {
         return ResponseEntity.ok()
