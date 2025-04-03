@@ -43,6 +43,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 /** Security configuration for WebGoat. */
 @Configuration
@@ -53,7 +56,9 @@ public class WebSecurityConfig {
   private final UserService userDetailsService;
 
   @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+  public SecurityFilterChain filterChain(HttpSecurity http, HandlerMappingIntrospector introspector) throws Exception {
+    MvcRequestMatcher.Builder mvcMatcherBuilder = new MvcRequestMatcher.Builder(introspector);
+    
     return http.authorizeHttpRequests(
             auth ->
                 auth.requestMatchers(
@@ -83,7 +88,20 @@ public class WebSecurityConfig {
               oidc.loginPage("/login");
             })
         .logout(logout -> logout.deleteCookies("JSESSIONID").invalidateHttpSession(true))
-        .csrf(csrf -> csrf.disable())
+        // Enable CSRF protection but exclude specific paths that need to work without it
+        // This is a compromise for WebGoat as a teaching tool
+        .csrf(csrf -> {
+            csrf.csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler());
+            // Disable CSRF for specific lesson paths that need to demonstrate vulnerabilities
+            csrf.ignoringRequestMatchers(
+                mvcMatcherBuilder.pattern("/xxe/**"),
+                mvcMatcherBuilder.pattern("/csrf/**"),
+                mvcMatcherBuilder.pattern("/lesson/**"),
+                mvcMatcherBuilder.pattern("/WebWolf/**"),
+                mvcMatcherBuilder.pattern("/service/**"),
+                mvcMatcherBuilder.pattern("/login")
+            );
+        })
         .headers(headers -> headers.disable())
         .exceptionHandling(
             handling ->
