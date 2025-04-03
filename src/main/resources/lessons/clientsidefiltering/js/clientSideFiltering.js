@@ -3,7 +3,21 @@ var dataFetched = false;
 function selectUser() {
 
     var newEmployeeID = $("#UserSelect").val();
-    document.getElementById("employeeRecord").innerHTML = document.getElementById(newEmployeeID).innerHTML;
+    // Fix XSS vulnerability by using a safer approach to copy content
+    var sourceElement = document.getElementById(newEmployeeID);
+    if (sourceElement) {
+        // Create a clone of the source element's content
+        var clone = sourceElement.cloneNode(true);
+        var targetElement = document.getElementById("employeeRecord");
+        // Clear the target element
+        while (targetElement.firstChild) {
+            targetElement.removeChild(targetElement.firstChild);
+        }
+        // Append the cloned content
+        while (clone.firstChild) {
+            targetElement.appendChild(clone.firstChild);
+        }
+    }
 }
 
 function fetchUserData() {
