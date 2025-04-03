@@ -88,8 +88,26 @@ public class ProfileUploadRetrieval extends AssignmentEndpoint {
     }
     try {
       var id = request.getParameter("id");
-      var catPicture =
-          new File(catPicturesDirectory, (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg");
+      
+      // Sanitize the id parameter to prevent path traversal
+      String safeId;
+      if (id == null) {
+        safeId = String.valueOf(RandomUtils.nextInt(1, 11));
+      } else {
+        // Extract just the filename part if any path characters are present
+        // This prevents path traversal while allowing the exercise to work
+        File tempFile = new File(id);
+        String fileName = tempFile.getName();
+        
+        // Further restrict to just alphanumeric characters and ensure it's a valid filename
+        if (fileName.matches("^[a-zA-Z0-9._-]+$")) {
+          safeId = fileName;
+        } else {
+          safeId = String.valueOf(RandomUtils.nextInt(1, 11));
+        }
+      }
+      
+      var catPicture = new File(catPicturesDirectory, safeId + ".jpg");
 
       if (catPicture.getName().toLowerCase().contains("path-traversal-secret.jpg")) {
         return ResponseEntity.ok()
