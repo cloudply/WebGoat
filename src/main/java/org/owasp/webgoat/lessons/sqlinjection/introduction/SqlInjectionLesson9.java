@@ -26,6 +26,7 @@ import static org.hsqldb.jdbc.JDBCResultSet.CONCUR_UPDATABLE;
 import static org.hsqldb.jdbc.JDBCResultSet.TYPE_SCROLL_SENSITIVE;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -78,7 +79,18 @@ public class SqlInjectionLesson9 extends AssignmentEndpoint {
       // do injectable query
       Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
       SqlInjectionLesson8.log(connection, queryInjection);
-      statement.execute(queryInjection);
+      
+      try {
+        statement.execute(queryInjection);
+      } catch (SQLException e) {
+        // If the query fails due to SQL injection attempt, return error
+        connection.rollback();
+        connection.setAutoCommit(true);
+        return failed(this)
+            .output("<br><span class='feedback-negative'>" + e.getMessage() + "</span>")
+            .build();
+      }
+      
       // check new sum of salaries other employees and new salaries of John
       int newJohnSalary = this.getJohnSalary(connection);
       int newSumSalariesOfOtherEmployees = this.getSumSalariesOfOtherEmployees(connection);
