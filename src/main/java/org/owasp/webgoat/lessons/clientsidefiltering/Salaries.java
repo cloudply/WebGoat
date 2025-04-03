@@ -32,6 +32,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
@@ -43,6 +46,7 @@ import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
@@ -75,17 +79,30 @@ public class Salaries {
   public List<Map<String, Object>> invoke() {
     NodeList nodes = null;
     File d = new File(webGoatHomeDirectory, "ClientSideFiltering/employees.xml");
-    XPathFactory factory = XPathFactory.newInstance();
-    XPath path = factory.newXPath();
+    
     int columns = 5;
     List<Map<String, Object>> json = new ArrayList<>();
     java.util.Map<String, Object> employeeJson = new HashMap<>();
 
     try (InputStream is = new FileInputStream(d)) {
-      InputSource inputSource = new InputSource(is);
+      // Create a secure DocumentBuilderFactory
+      DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+      // Enable secure processing
+      dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+      // Disable DTDs completely for this parser
+      dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+      // Disable external entities
+      dbf.setExpandEntityReferences(false);
+      
+      // Parse the XML document securely
+      DocumentBuilder db = dbf.newDocumentBuilder();
+      Document doc = db.parse(is);
+      
+      // Create XPath
+      XPathFactory factory = XPathFactory.newInstance();
+      XPath path = factory.newXPath();
 
       StringBuilder sb = new StringBuilder();
-
       sb.append("/Employees/Employee/UserID | ");
       sb.append("/Employees/Employee/FirstName | ");
       sb.append("/Employees/Employee/LastName | ");
@@ -93,7 +110,7 @@ public class Salaries {
       sb.append("/Employees/Employee/Salary ");
 
       String expression = sb.toString();
-      nodes = (NodeList) path.evaluate(expression, inputSource, XPathConstants.NODESET);
+      nodes = (NodeList) path.evaluate(expression, doc, XPathConstants.NODESET);
       for (int i = 0; i < nodes.getLength(); i++) {
         if (i % columns == 0) {
           employeeJson = new HashMap<>();
@@ -102,10 +119,8 @@ public class Salaries {
         Node node = nodes.item(i);
         employeeJson.put(node.getNodeName(), node.getTextContent());
       }
-    } catch (XPathExpressionException e) {
-      log.error("Unable to parse xml", e);
-    } catch (IOException e) {
-      log.error("Unable to read employees.xml at location: '{}'", d);
+    } catch (Exception e) {
+      log.error("Error processing XML", e);
     }
     return json;
   }
