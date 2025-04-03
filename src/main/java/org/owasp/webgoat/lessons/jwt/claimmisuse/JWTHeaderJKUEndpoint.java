@@ -48,7 +48,17 @@ public class JWTHeaderJKUEndpoint extends AssignmentEndpoint {
       try {
         var decodedJWT = JWT.decode(token);
         var jku = decodedJWT.getHeaderClaim("jku");
-        JwkProvider jwkProvider = new JwkProviderBuilder(new URL(jku.asString())).build();
+        
+        // Validate URL host to prevent SSRF
+        URL jkuUrl = new URL(jku.asString());
+        String host = jkuUrl.getHost();
+        
+        // Only allow specific hosts to prevent SSRF
+        if (!(host.equals("webgoat.org") || host.equals("localhost") || host.equals("127.0.0.1"))) {
+          return failed(this).feedback("jwt-invalid-token").output("Invalid JKU host").build();
+        }
+        
+        JwkProvider jwkProvider = new JwkProviderBuilder(jkuUrl).build();
         var jwk = jwkProvider.get(decodedJWT.getKeyId());
         var algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey());
         JWT.require(algorithm).build().verify(decodedJWT);
