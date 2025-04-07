@@ -3,7 +3,9 @@ pipeline {
     options {
         buildDiscarder(logRotator(numToKeepStr: "10"))
     }
-    agent any
+    agent {
+        label 'k8s'  // This should match the label of your Kubernetes pod template
+    }
     tools {
         jdk 'jdk21'
         maven 'maven'
