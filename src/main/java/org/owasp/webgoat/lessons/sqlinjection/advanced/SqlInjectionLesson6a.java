@@ -64,8 +64,8 @@ public class SqlInjectionLesson6a extends AssignmentEndpoint {
     try (Connection connection = dataSource.getConnection()) {
       boolean usedUnion = true;
       query = "SELECT * FROM user_data WHERE last_name = '" + accountName + "'";
-      // Check if Union is used
-      if (!accountName.matches("(?i)(^[^-/*;)]*)(\\s*)UNION(.*$)")) {
+      // Check if Union is used - simple case-insensitive check without regex
+      if (!accountName.toLowerCase().contains("union")) {
         usedUnion = false;
       }
       try (Statement statement =
