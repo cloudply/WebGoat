@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -71,13 +72,28 @@ public class ProfileZipSlip extends ProfileUploadBase {
       while (entries.hasMoreElements()) {
         ZipEntry e = entries.nextElement();
         File f = new File(tmpZipDirectory.toFile(), e.getName());
-        InputStream is = zip.getInputStream(e);
-        Files.copy(is, f.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        Path targetPath = f.toPath().normalize();
+        // Fix for Zip Slip vulnerability - validate the file path is within the target directory
+        if (!targetPath.startsWith(tmpZipDirectory)) {
+          log.warn("Path traversal attempt detected: {}", e.getName());
+          continue; // Skip this entry instead of throwing an exception
+        }
+        if (e.isDirectory()) {
+          Files.createDirectories(targetPath);
+        } else {
+          // Create parent directories if they don't exist
+          Files.createDirectories(targetPath.getParent());
+          try (InputStream is = zip.getInputStream(e)) {
+            Files.copy(is, targetPath, StandardCopyOption.REPLACE_EXISTING);
+          }
+        }
       }
+      zip.close();
 
       return isSolved(currentImage, getProfilePictureAsBase64());
     } catch (IOException e) {
-      return failed(this).output(e.getMessage()).build();
+      log.error("Error processing zip file", e);
+      return failed(this).output("Error processing zip file: " + e.getMessage()).build();
     }
   }
 
