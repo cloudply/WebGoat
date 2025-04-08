@@ -6,9 +6,14 @@ import lombok.AllArgsConstructor;
 import org.flywaydb.core.Flyway;
 import org.owasp.webgoat.container.lessons.Initializeable;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 /**
  * @author nbaars
@@ -49,7 +54,11 @@ public class UserService implements UserDetailsService {
   }
 
   private void createLessonsForUser(WebGoatUser webGoatUser) {
-    jdbcTemplate.execute("CREATE SCHEMA \"" + webGoatUser.getUsername() + "\" authorization dba");
+    // Since we can't use parameters for identifiers in SQL, we need to sanitize the username
+    // to prevent SQL injection
+    String sanitizedUsername = webGoatUser.getUsername().replaceAll("[^a-zA-Z0-9]", "");
+    String sql = "CREATE SCHEMA \"" + sanitizedUsername + "\" authorization dba";
+    jdbcTemplate.execute(sql);
     flywayLessons.apply(webGoatUser.getUsername()).migrate();
   }
 
