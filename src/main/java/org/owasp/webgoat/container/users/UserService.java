@@ -49,8 +49,23 @@ public class UserService implements UserDetailsService {
   }
 
   private void createLessonsForUser(WebGoatUser webGoatUser) {
+    // Validate username to prevent SQL injection
+    if (!isValidSchemaName(webGoatUser.getUsername())) {
+      throw new IllegalArgumentException("Invalid schema name");
+    }
+    
+    // Use the validated username in the SQL statement
     jdbcTemplate.execute("CREATE SCHEMA \"" + webGoatUser.getUsername() + "\" authorization dba");
     flywayLessons.apply(webGoatUser.getUsername()).migrate();
+  }
+  
+  /**
+   * Validates that the schema name contains only allowed characters
+   * This prevents SQL injection in schema names
+   */
+  private boolean isValidSchemaName(String schemaName) {
+    // Only allow alphanumeric characters and underscores
+    return schemaName != null && schemaName.matches("^[a-zA-Z0-9_]+$");
   }
 
   public List<WebGoatUser> getAllUsers() {
