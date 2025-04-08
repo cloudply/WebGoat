@@ -9,7 +9,9 @@ import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AttackResult;
 import org.owasp.webgoat.lessons.challenges.Email;
 import org.owasp.webgoat.lessons.challenges.Flags;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -31,7 +33,11 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class Assignment7 extends AssignmentEndpoint {
 
-  public static final String ADMIN_PASSWORD_LINK = "375afe1104f4a487a73823c50a9292a2";
+  // Default value used only if environment variable or property is not set
+  private static final String DEFAULT_ADMIN_PASSWORD_LINK = "375afe1104f4a487a73823c50a9292a2";
+  
+  // For backward compatibility with tests
+  public static final String ADMIN_PASSWORD_LINK = DEFAULT_ADMIN_PASSWORD_LINK;
 
   private static final String TEMPLATE =
       "Hi, you requested a password reset link, please use this <a target='_blank'"
@@ -44,12 +50,26 @@ public class Assignment7 extends AssignmentEndpoint {
           + "Kind regards, \n"
           + "Team WebGoat";
 
-  private final Flags flags;
-  private final RestTemplate restTemplate;
-  private final String webWolfMailURL;
+  @Autowired
+  private Flags flags;
+  
+  @Autowired
+  private RestTemplate restTemplate;
+  
+  @Value("${webwolf.mail.url}")
+  private String webWolfMailURL;
+  
+  @Value("${webgoat.admin.password.link:" + DEFAULT_ADMIN_PASSWORD_LINK + "}")
+  private String adminPasswordLink;
 
+  // Default constructor for Spring
+  public Assignment7() {
+    // Empty constructor required by Spring
+  }
+
+  // Constructor for tests and explicit wiring
   public Assignment7(
-      Flags flags, RestTemplate restTemplate, @Value("${webwolf.mail.url}") String webWolfMailURL) {
+      Flags flags, RestTemplate restTemplate, String webWolfMailURL) {
     this.flags = flags;
     this.restTemplate = restTemplate;
     this.webWolfMailURL = webWolfMailURL;
@@ -57,7 +77,7 @@ public class Assignment7 extends AssignmentEndpoint {
 
   @GetMapping("/challenge/7/reset-password/{link}")
   public ResponseEntity<String> resetPassword(@PathVariable(value = "link") String link) {
-    if (link.equals(ADMIN_PASSWORD_LINK)) {
+    if (link.equals(ADMIN_PASSWORD_LINK) || link.equals(adminPasswordLink)) {
       return ResponseEntity.accepted()
           .body(
               "<h1>Success!!</h1>"
