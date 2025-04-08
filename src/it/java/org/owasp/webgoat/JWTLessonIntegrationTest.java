@@ -10,6 +10,9 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.impl.TextCodec;
+import io.jsonwebtoken.JwtHandlerAdapter;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
 import io.restassured.RestAssured;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -72,11 +75,14 @@ public class JWTLessonIntegrationTest extends IntegrationTest {
   private String getSecretToken(String token) {
     for (String key : JWTSecretKeyEndpoint.SECRETS) {
       try {
-        Jwt jwt = Jwts.parser().setSigningKey(TextCodec.BASE64.encode(key)).parse(token);
+        // Use parseClaimsJws to properly verify the signature
+        Jwts.parser()
+            .setSigningKey(TextCodec.BASE64.encode(key))
+            .parseClaimsJws(token);
+        return TextCodec.BASE64.encode(key);
       } catch (JwtException e) {
         continue;
       }
-      return TextCodec.BASE64.encode(key);
     }
     return null;
   }
