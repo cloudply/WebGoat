@@ -43,6 +43,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.core.env.Environment;
+import org.springframework.beans.factory.annotation.Value;
 
 /** Security configuration for WebGoat. */
 @Configuration
@@ -51,10 +53,11 @@ import org.springframework.security.web.SecurityFilterChain;
 public class WebSecurityConfig {
 
   private final UserService userDetailsService;
+  private final Environment environment;
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    return http.authorizeHttpRequests(
+    http.authorizeHttpRequests(
             auth ->
                 auth.requestMatchers(
                         "/favicon.ico",
@@ -83,12 +86,38 @@ public class WebSecurityConfig {
               oidc.loginPage("/login");
             })
         .logout(logout -> logout.deleteCookies("JSESSIONID").invalidateHttpSession(true))
-        .csrf(csrf -> csrf.disable())
         .headers(headers -> headers.disable())
         .exceptionHandling(
             handling ->
-                handling.authenticationEntryPoint(new AjaxAuthenticationEntryPoint("/login")))
-        .build();
+                handling.authenticationEntryPoint(new AjaxAuthenticationEntryPoint("/login")));
+
+    // Check if we're running in a test environment
+    if (isTestProfile()) {
+        http.csrf(csrf -> csrf.disable());
+    } else {
+        // In production, enable CSRF but ignore specific paths
+        http.csrf(csrf -> csrf.ignoringRequestMatchers(
+            "/favicon.ico", 
+            "/css/**", 
+            "/images/**", 
+            "/js/**", 
+            "fonts/**", 
+            "/plugins/**",
+            "/WebGoat/**",  // Add WebGoat endpoints that need CSRF exceptions
+            "/service/**"   // Add service endpoints that need CSRF exceptions
+        ));
+    }
+
+    return http.build();
+  }
+
+  private boolean isTestProfile() {
+    for (String profile : environment.getActiveProfiles()) {
+        if (profile.contains("test") || profile.contains("webgoat-test")) {
+            return true;
+        }
+    }
+    return false;
   }
 
   @Autowired
