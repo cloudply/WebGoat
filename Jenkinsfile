@@ -13,7 +13,7 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                sh 'mvn spotless:apply install  -Dexec.skip=true -Dspotless.check.skip=true -DskipITs -Dsurefire.excludes=**/BlindSendFileAssignmentTest*'
+                sh 'mvn spotless:apply install -Dspotless.check.skip=true -DskipITs'
             }
         }
     }
