@@ -88,8 +88,13 @@ public class ProfileUploadRetrieval extends AssignmentEndpoint {
     }
     try {
       var id = request.getParameter("id");
+      // Sanitize the user input by ensuring it only contains digits
+      String sanitizedId = id;
+      if (id != null && !id.matches("^\\d+$")) {
+        sanitizedId = null;
+      }
       var catPicture =
-          new File(catPicturesDirectory, (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg");
+          new File(catPicturesDirectory, (sanitizedId == null ? RandomUtils.nextInt(1, 11) : sanitizedId) + ".jpg");
 
       if (catPicture.getName().toLowerCase().contains("path-traversal-secret.jpg")) {
         return ResponseEntity.ok()
