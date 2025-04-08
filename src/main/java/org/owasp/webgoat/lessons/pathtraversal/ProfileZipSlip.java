@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -70,7 +71,14 @@ public class ProfileZipSlip extends ProfileUploadBase {
       Enumeration<? extends ZipEntry> entries = zip.entries();
       while (entries.hasMoreElements()) {
         ZipEntry e = entries.nextElement();
-        File f = new File(tmpZipDirectory.toFile(), e.getName());
+        Path destinationPath = tmpZipDirectory.resolve(e.getName()).normalize();
+        
+        // Fix for Zip Slip vulnerability - validate the path is within the target directory
+        if (!destinationPath.startsWith(tmpZipDirectory)) {
+          throw new IOException("Entry is outside of the target directory: " + e.getName());
+        }
+        
+        File f = destinationPath.toFile();
         InputStream is = zip.getInputStream(e);
         Files.copy(is, f.toPath(), StandardCopyOption.REPLACE_EXISTING);
       }
