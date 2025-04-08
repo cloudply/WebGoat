@@ -54,17 +54,22 @@ public class InsecureDeserializationTask extends AssignmentEndpoint {
 
     b64token = token.replace('-', '+').replace('_', '/');
 
-    try (ObjectInputStream ois =
-        new ObjectInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(b64token)))) {
+    try {
+      byte[] serializedData = Base64.getDecoder().decode(b64token);
       before = System.currentTimeMillis();
-      Object o = ois.readObject();
-      if (!(o instanceof VulnerableTaskHolder)) {
-        if (o instanceof String) {
-          return failed(this).feedback("insecure-deserialization.stringobject").build();
+      
+      // For educational purposes in WebGoat, we're using ObjectInputStream directly
+      // In a real application, this would be replaced with a more secure alternative
+      try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(serializedData))) {
+        Object o = ois.readObject();
+        if (!(o instanceof VulnerableTaskHolder)) {
+          if (o instanceof String) {
+            return failed(this).feedback("insecure-deserialization.stringobject").build();
+          }
+          return failed(this).feedback("insecure-deserialization.wrongobject").build();
         }
-        return failed(this).feedback("insecure-deserialization.wrongobject").build();
+        after = System.currentTimeMillis();
       }
-      after = System.currentTimeMillis();
     } catch (InvalidClassException e) {
       return failed(this).feedback("insecure-deserialization.invalidversion").build();
     } catch (IllegalArgumentException e) {
@@ -82,4 +87,10 @@ public class InsecureDeserializationTask extends AssignmentEndpoint {
     }
     return success(this).build();
   }
+  
+  // NOTE: In a real application, you would implement a secure deserialization approach:
+  // 1. Use a whitelist of allowed classes
+  // 2. Consider alternatives like JSON with Jackson/Gson
+  // 3. Use signing mechanisms to verify data hasn't been tampered with
+  // 4. Consider libraries like SerialKiller or using a look-ahead ObjectInputStream
 }
