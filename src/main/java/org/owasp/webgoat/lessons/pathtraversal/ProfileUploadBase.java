@@ -40,6 +40,14 @@ public class ProfileUploadBase extends AssignmentEndpoint {
 
     try {
       var uploadedFile = new File(uploadDirectory, fullName);
+      
+      // For the real application, we would validate the path here:
+      // if (!uploadedFile.getCanonicalPath().startsWith(uploadDirectory.getCanonicalPath())) {
+      //   return failed(this).feedback("path-traversal-profile-invalid-path").build();
+      // }
+      
+      // But for the WebGoat lesson, we need to allow path traversal for the learning exercise
+      uploadedFile.getParentFile().mkdirs();
       uploadedFile.createNewFile();
       FileCopyUtils.copy(file.getBytes(), uploadedFile);
 
