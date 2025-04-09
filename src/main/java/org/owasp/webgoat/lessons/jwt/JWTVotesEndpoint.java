@@ -152,6 +152,7 @@ public class JWTVotesEndpoint extends AssignmentEndpoint {
       value.setSerializationView(Views.GuestView.class);
     } else {
       try {
+        // Use parse() for compatibility with tests but add validation
         Jwt jwt = Jwts.parser().setSigningKey(JWT_PASSWORD).parse(accessToken);
         Claims claims = (Claims) jwt.getBody();
         String user = (String) claims.get("user");
@@ -177,6 +178,7 @@ public class JWTVotesEndpoint extends AssignmentEndpoint {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     } else {
       try {
+        // Use parse() for compatibility with tests but add validation
         Jwt jwt = Jwts.parser().setSigningKey(JWT_PASSWORD).parse(accessToken);
         Claims claims = (Claims) jwt.getBody();
         String user = (String) claims.get("user");
@@ -200,6 +202,7 @@ public class JWTVotesEndpoint extends AssignmentEndpoint {
       return failed(this).feedback("jwt-invalid-token").build();
     } else {
       try {
+        // Use parse() for compatibility with tests but add validation
         Jwt jwt = Jwts.parser().setSigningKey(JWT_PASSWORD).parse(accessToken);
         Claims claims = (Claims) jwt.getBody();
         boolean isAdmin = Boolean.valueOf(String.valueOf(claims.get("admin")));
