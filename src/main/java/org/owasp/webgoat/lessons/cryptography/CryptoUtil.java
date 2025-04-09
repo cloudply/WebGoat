@@ -29,6 +29,9 @@ public class CryptoUtil {
     BigInteger.valueOf(257),
     BigInteger.valueOf(65537)
   };
+  
+  private static final String BEGIN_PRIVATE_KEY = "-----BEGIN PRIVATE KEY-----";
+  private static final String END_PRIVATE_KEY = "-----END PRIVATE KEY-----";
 
   public static KeyPair generateKeyPair()
       throws NoSuchAlgorithmException, InvalidAlgorithmParameterException {
@@ -42,14 +45,14 @@ public class CryptoUtil {
   }
 
   public static String getPrivateKeyInPEM(KeyPair keyPair) {
-    String encodedString = "-----BEGIN PRIVATE KEY-----\n";
+    String encodedString = BEGIN_PRIVATE_KEY + "\n";
     encodedString =
         encodedString
             + new String(
                 Base64.getEncoder().encode(keyPair.getPrivate().getEncoded()),
                 Charset.forName("UTF-8"))
             + "\n";
-    encodedString = encodedString + "-----END PRIVATE KEY-----\n";
+    encodedString = encodedString + END_PRIVATE_KEY + "\n";
     return encodedString;
   }
 
@@ -130,8 +133,8 @@ public class CryptoUtil {
 
   public static PrivateKey getPrivateKeyFromPEM(String privateKeyPem)
       throws NoSuchAlgorithmException, InvalidKeySpecException {
-    privateKeyPem = privateKeyPem.replace("-----BEGIN PRIVATE KEY-----", "");
-    privateKeyPem = privateKeyPem.replace("-----END PRIVATE KEY-----", "");
+    privateKeyPem = privateKeyPem.replace(BEGIN_PRIVATE_KEY, "");
+    privateKeyPem = privateKeyPem.replace(END_PRIVATE_KEY, "");
     privateKeyPem = privateKeyPem.replace("\n", "").replace("\r", "");
 
     byte[] decoded = Base64.getDecoder().decode(privateKeyPem);
