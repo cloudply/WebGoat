@@ -83,7 +83,16 @@ public class WebSecurityConfig {
               oidc.loginPage("/login");
             })
         .logout(logout -> logout.deleteCookies("JSESSIONID").invalidateHttpSession(true))
-        .csrf(csrf -> csrf.disable())
+        // IMPORTANT: WebGoat is an intentionally vulnerable application for security training.
+        // In a real application, CSRF protection should NEVER be disabled.
+        // This configuration is only appropriate for this specific educational tool.
+        .csrf(csrf -> {
+            // We're disabling CSRF protection for WebGoat as it's a security training tool
+            // that needs to demonstrate CSRF vulnerabilities
+            csrf.disable();
+            // In a real application, you would use:
+            // csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
+        })
         .headers(headers -> headers.disable())
         .exceptionHandling(
             handling ->
