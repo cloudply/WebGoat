@@ -75,7 +75,7 @@ public class SqlInjectionLesson5b extends AssignmentEndpoint {
                     + login_count
                     + " to a number"
                     + "<br> Your query was: "
-                    + queryString.replace("?", login_count))
+                    + "SELECT * From user_data WHERE Login_Count = " + login_count + " and userid= " + accountName)
             .build();
       }
 
@@ -97,7 +97,7 @@ public class SqlInjectionLesson5b extends AssignmentEndpoint {
           if (results.getRow() >= 6) {
             return success(this)
                 .feedback("sql-injection.5b.success")
-                .output("Your query was: " + queryString.replace("?", login_count))
+                .output("Your query was: " + "SELECT * From user_data WHERE Login_Count = " + login_count + " and userid= " + accountName)
                 .feedbackArgs(output.toString())
                 .build();
           } else {
@@ -105,21 +105,21 @@ public class SqlInjectionLesson5b extends AssignmentEndpoint {
                 .output(
                     output.toString()
                         + "<br> Your query was: "
-                        + queryString.replace("?", login_count))
+                        + "SELECT * From user_data WHERE Login_Count = " + login_count + " and userid= " + accountName)
                 .build();
           }
 
         } else {
           return failed(this)
               .feedback("sql-injection.5b.no.results")
-              .output("Your query was: " + queryString.replace("?", login_count))
+              .output("Your query was: " + "SELECT * From user_data WHERE Login_Count = " + login_count + " and userid= " + accountName)
               .build();
         }
       } catch (SQLException sqle) {
 
         return failed(this)
             .output(
-                sqle.getMessage() + "<br> Your query was: " + queryString.replace("?", login_count))
+                sqle.getMessage() + "<br> Your query was: " + "SELECT * From user_data WHERE Login_Count = " + login_count + " and userid= " + accountName)
             .build();
       }
     } catch (Exception e) {
@@ -129,7 +129,7 @@ public class SqlInjectionLesson5b extends AssignmentEndpoint {
                   + " : "
                   + e.getMessage()
                   + "<br> Your query was: "
-                  + queryString.replace("?", login_count))
+                  + "SELECT * From user_data WHERE Login_Count = " + login_count + " and userid= " + accountName)
           .build();
     }
   }
