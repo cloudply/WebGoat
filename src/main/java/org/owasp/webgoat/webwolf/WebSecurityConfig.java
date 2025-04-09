@@ -61,6 +61,9 @@ public class WebSecurityConfig {
               auth.requestMatchers(HttpMethod.POST, "/files", "/mail", "/requests").permitAll();
               auth.anyRequest().authenticated();
             })
+        // Note: WebWolf is a companion application to WebGoat (deliberately vulnerable app)
+        // CSRF is disabled here as this is a training tool, not a production application
+        // In real applications, CSRF protection should be enabled
         .csrf(csrf -> csrf.disable())
         .formLogin(
             login ->
