@@ -59,11 +59,12 @@ public class SqlInjectionLesson5a extends AssignmentEndpoint {
   protected AttackResult injectableQuery(String accountName) {
     String query = "";
     try (Connection connection = dataSource.getConnection()) {
-      query =
-          "SELECT * FROM user_data WHERE first_name = 'John' and last_name = '" + accountName + "'";
+      query = "SELECT * FROM user_data WHERE first_name = 'John' and last_name = '" + accountName + "'";
+      
       try (Statement statement =
           connection.createStatement(
-              ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
+              ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
+        
         ResultSet results = statement.executeQuery(query);
 
         if ((results != null) && (results.first())) {
@@ -81,7 +82,10 @@ public class SqlInjectionLesson5a extends AssignmentEndpoint {
                 .feedbackArgs(output.toString())
                 .build();
           } else {
-            return failed(this).output(output.toString() + "<br> Your query was: " + query).build();
+            return failed(this)
+                .feedback("assignment.not.solved")
+                .output(output.toString() + "<br> Your query was: " + query)
+                .build();
           }
         } else {
           return failed(this)
