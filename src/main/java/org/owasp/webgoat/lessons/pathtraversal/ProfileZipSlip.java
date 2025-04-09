@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -66,17 +67,46 @@ public class ProfileZipSlip extends ProfileUploadBase {
       var uploadedZipFile = tmpZipDirectory.resolve(file.getOriginalFilename());
       FileCopyUtils.copy(file.getBytes(), uploadedZipFile.toFile());
 
-      ZipFile zip = new ZipFile(uploadedZipFile.toFile());
-      Enumeration<? extends ZipEntry> entries = zip.entries();
-      while (entries.hasMoreElements()) {
-        ZipEntry e = entries.nextElement();
-        File f = new File(tmpZipDirectory.toFile(), e.getName());
-        InputStream is = zip.getInputStream(e);
-        Files.copy(is, f.toPath(), StandardCopyOption.REPLACE_EXISTING);
+      try (ZipFile zip = new ZipFile(uploadedZipFile.toFile())) {
+        Enumeration<? extends ZipEntry> entries = zip.entries();
+        while (entries.hasMoreElements()) {
+          ZipEntry e = entries.nextElement();
+          if (e.isDirectory()) {
+            continue; // Skip directories
+          }
+          
+          // Get the entry name and sanitize it
+          String entryName = e.getName();
+          
+          // Skip entries with suspicious paths
+          if (entryName.contains("..") || entryName.startsWith("/") || entryName.startsWith("\\")) {
+            continue;
+          }
+          
+          // Create a file object for the target path
+          File f = new File(tmpZipDirectory.toFile(), entryName);
+          
+          // Ensure the normalized path is within the target directory
+          if (!f.getCanonicalPath().startsWith(tmpZipDirectory.toFile().getCanonicalPath())) {
+            continue; // Skip this entry as it's trying to write outside the target directory
+          }
+          
+          // Create parent directories if needed
+          File parentDir = f.getParentFile();
+          if (parentDir != null && !parentDir.exists()) {
+            parentDir.mkdirs();
+          }
+          
+          // Copy the file
+          try (InputStream is = zip.getInputStream(e)) {
+            Files.copy(is, f.toPath(), StandardCopyOption.REPLACE_EXISTING);
+          }
+        }
       }
 
       return isSolved(currentImage, getProfilePictureAsBase64());
     } catch (IOException e) {
+      log.error("Error processing zip file", e);
       return failed(this).output(e.getMessage()).build();
     }
   }
