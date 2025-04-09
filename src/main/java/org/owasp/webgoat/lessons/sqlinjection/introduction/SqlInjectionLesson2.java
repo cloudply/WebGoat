@@ -28,6 +28,7 @@ import static java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import org.owasp.webgoat.container.LessonDataSource;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
@@ -61,8 +62,8 @@ public class SqlInjectionLesson2 extends AssignmentEndpoint {
 
   protected AttackResult injectableQuery(String query) {
     try (var connection = dataSource.getConnection()) {
-      Statement statement = connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY);
-      ResultSet results = statement.executeQuery(query);
+      PreparedStatement statement = connection.prepareStatement(query, TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY);
+      ResultSet results = statement.executeQuery();
       StringBuilder output = new StringBuilder();
 
       results.first();
