@@ -24,7 +24,6 @@ package org.owasp.webgoat.lessons.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwsHeader;
-import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SigningKeyResolverAdapter;
 import io.jsonwebtoken.impl.TextCodec;
@@ -52,17 +51,20 @@ public class TokenTest {
             .signWith(io.jsonwebtoken.SignatureAlgorithm.HS512, key)
             .compact();
     log.debug(token);
-    Jwt jwt = Jwts.parser().setSigningKey("qwertyqwerty1234").parse(token);
-    jwt =
-        Jwts.parser()
-            .setSigningKeyResolver(
-                new SigningKeyResolverAdapter() {
-                  @Override
-                  public byte[] resolveSigningKeyBytes(JwsHeader header, Claims claims) {
-                    return TextCodec.BASE64.decode(key);
-                  }
-                })
-            .parse(token);
+    
+    // Fix: Use parseClaimsJws instead of parse to properly verify the signature
+    Jwts.parser().setSigningKey("qwertyqwerty1234").parseClaimsJws(token);
+    
+    // Fix: Use parseClaimsJws instead of parse to properly verify the signature
+    Jwts.parser()
+        .setSigningKeyResolver(
+            new SigningKeyResolverAdapter() {
+              @Override
+              public byte[] resolveSigningKeyBytes(JwsHeader header, Claims claims) {
+                return TextCodec.BASE64.decode(key);
+              }
+            })
+        .parseClaimsJws(token);
   }
 
   @Test
