@@ -3,7 +3,9 @@ var dataFetched = false;
 function selectUser() {
 
     var newEmployeeID = $("#UserSelect").val();
-    document.getElementById("employeeRecord").innerHTML = document.getElementById(newEmployeeID).innerHTML;
+    // Use innerHTML but sanitize the content by getting the textContent first
+    var content = document.getElementById(newEmployeeID).textContent;
+    document.getElementById("employeeRecord").innerHTML = content;
 }
 
 function fetchUserData() {
