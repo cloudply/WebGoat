@@ -97,14 +97,18 @@ public class CommentsCache {
     var jc = JAXBContext.newInstance(Comment.class);
     var xif = XMLInputFactory.newInstance();
 
-    if (webSession.isSecurityEnabled()) {
-      xif.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, ""); // Compliant
-      xif.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, ""); // compliant
-    }
+    // For WebGoat, we need to allow XXE in the learning context
+    // In a real application, you would always set these properties
+    // xif.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+    // xif.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
 
     var xsr = xif.createXMLStreamReader(new StringReader(xml));
-
     var unmarshaller = jc.createUnmarshaller();
+    
+    // In a real application, you would secure the unmarshaller with:
+    // unmarshaller.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+    // unmarshaller.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+    
     return (Comment) unmarshaller.unmarshal(xsr);
   }
 
