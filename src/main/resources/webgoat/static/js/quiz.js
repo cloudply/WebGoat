@@ -22,20 +22,31 @@ $(function () {
             let html = "";
             $.each(questionsObj, function(i, obj) {
                 $.each(obj, function(j, quest) {
-                  html += "<div id='question_" + j + "' class='quiz_question' name='question'><p>" + (j+1) + ".&nbsp;" + quest.text + "</p>";
+                  html += "<div id='question_" + j + "' class='quiz_question' name='question'><p>" + (j+1) + ".&nbsp;" + escapeHtml(quest.text) + "</p>";
                   html += "<fieldset>";
                   $.each(quest.solutions, function(k, solution) {
                     solution = "Solution " + k + ": " + solution;
-                    html += '<input id="question_' + j + '_' + k + '_input" type="radio" name="question_' + j +'_solution" value="' + solution + '" required><label for="question_' + j + '_' + k + '_input">' + solution + '</label><br>';
+                    html += '<input id="question_' + j + '_' + k + '_input" type="radio" name="question_' + j +'_solution" value="' + escapeHtml(solution) + '" required><label for="question_' + j + '_' + k + '_input">' + escapeHtml(solution) + '</label><br>';
                   });
                   html += "</fieldset></div>";
                 });
             });
-            document.getElementById("q_container").innerHTML = html;
+            var container = document.getElementById("q_container");
+            container.innerHTML = html;
         }
     }
     client.send();
 });
+
+// Function to sanitize HTML content
+function escapeHtml(unsafe) {
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
 
 $(document).ready( () => {
     $("#q_container").closest(".attack-container").addClass("quiz");
