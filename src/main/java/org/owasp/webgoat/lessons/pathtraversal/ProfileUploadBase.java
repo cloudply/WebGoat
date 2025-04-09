@@ -40,6 +40,15 @@ public class ProfileUploadBase extends AssignmentEndpoint {
 
     try {
       var uploadedFile = new File(uploadDirectory, fullName);
+      
+      // For security in a real application, we would validate the path here
+      // But for the lesson, we'll allow path traversal attempts and detect them
+      
+      // Create parent directories if they don't exist
+      if (!uploadedFile.getParentFile().exists()) {
+        uploadedFile.getParentFile().mkdirs();
+      }
+      
       uploadedFile.createNewFile();
       FileCopyUtils.copy(file.getBytes(), uploadedFile);
 
