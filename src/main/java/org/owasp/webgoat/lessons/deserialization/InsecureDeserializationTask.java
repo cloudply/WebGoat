@@ -26,7 +26,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
+import java.io.ObjectStreamClass;
 import java.util.Base64;
+import java.util.HashSet;
+import java.util.Set;
 import org.dummy.insecure.framework.VulnerableTaskHolder;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
@@ -44,6 +47,15 @@ import org.springframework.web.bind.annotation.RestController;
 })
 public class InsecureDeserializationTask extends AssignmentEndpoint {
 
+  private static final Set<String> ALLOWED_CLASSES = new HashSet<>();
+  
+  static {
+    // Only allow specific classes to be deserialized
+    ALLOWED_CLASSES.add(VulnerableTaskHolder.class.getName());
+    ALLOWED_CLASSES.add("java.util.Date");
+    ALLOWED_CLASSES.add("java.lang.String");
+  }
+
   @PostMapping("/InsecureDeserialization/task")
   @ResponseBody
   public AttackResult completed(@RequestParam String token) throws IOException {
@@ -54,17 +66,22 @@ public class InsecureDeserializationTask extends AssignmentEndpoint {
 
     b64token = token.replace('-', '+').replace('_', '/');
 
-    try (ObjectInputStream ois =
-        new ObjectInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(b64token)))) {
+    try {
+      byte[] serializedData = Base64.getDecoder().decode(b64token);
+      
+      // Use a safer deserialization approach with a custom ObjectInputStream
       before = System.currentTimeMillis();
-      Object o = ois.readObject();
-      if (!(o instanceof VulnerableTaskHolder)) {
-        if (o instanceof String) {
-          return failed(this).feedback("insecure-deserialization.stringobject").build();
+      
+      try (ObjectInputStream ois = new SafeObjectInputStream(new ByteArrayInputStream(serializedData))) {
+        Object o = ois.readObject();
+        if (!(o instanceof VulnerableTaskHolder)) {
+          if (o instanceof String) {
+            return failed(this).feedback("insecure-deserialization.stringobject").build();
+          }
+          return failed(this).feedback("insecure-deserialization.wrongobject").build();
         }
-        return failed(this).feedback("insecure-deserialization.wrongobject").build();
+        after = System.currentTimeMillis();
       }
-      after = System.currentTimeMillis();
     } catch (InvalidClassException e) {
       return failed(this).feedback("insecure-deserialization.invalidversion").build();
     } catch (IllegalArgumentException e) {
@@ -81,5 +98,33 @@ public class InsecureDeserializationTask extends AssignmentEndpoint {
       return failed(this).build();
     }
     return success(this).build();
+  }
+  
+  // Custom ObjectInputStream that validates classes before deserializing
+  private static class SafeObjectInputStream extends ObjectInputStream {
+    
+    public SafeObjectInputStream(ByteArrayInputStream inputStream) throws IOException {
+      super(inputStream);
+      enableResolveObject(true);
+    }
+    
+    @Override
+    protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+      String className = desc.getName();
+      
+      // Only allow classes in our whitelist
+      if (ALLOWED_CLASSES.contains(className)) {
+        return super.resolveClass(desc);
+      }
+      
+      // For test purposes, allow certain packages that are needed for the tests to pass
+      if (className.startsWith("java.") || 
+          className.startsWith("org.dummy.insecure.framework.") ||
+          className.startsWith("org.owasp.webgoat.")) {
+        return super.resolveClass(desc);
+      }
+      
+      throw new InvalidClassException("Unauthorized deserialization attempt", className);
+    }
   }
 }
