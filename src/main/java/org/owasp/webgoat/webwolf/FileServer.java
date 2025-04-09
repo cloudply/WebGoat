@@ -87,18 +87,29 @@ public class FileServer {
     var username = authentication.getName();
     var destinationDir = new File(fileLocation, username);
     destinationDir.mkdirs();
+    
+    ModelMap modelMap = new ModelMap();
+    
     // DO NOT use multipartFile.transferTo(), see
     // https://stackoverflow.com/questions/60336929/java-nio-file-nosuchfileexception-when-file-transferto-is-called
     try (InputStream is = multipartFile.getInputStream()) {
-      var destinationFile = destinationDir.toPath().resolve(multipartFile.getOriginalFilename());
+      String originalFilename = multipartFile.getOriginalFilename();
+      // Validate filename to prevent path traversal attacks
+      if (originalFilename == null || originalFilename.contains("..") || 
+          originalFilename.contains("/") || originalFilename.contains("\\")) {
+        log.warn("Invalid filename detected: {}", originalFilename);
+        modelMap.addAttribute("uploadFailure", "Invalid filename");
+        return new ModelAndView(new RedirectView("files", true), modelMap);
+      }
+      
+      var destinationFile = destinationDir.toPath().resolve(originalFilename);
       Files.deleteIfExists(destinationFile);
       Files.copy(is, destinationFile);
+      log.debug("File saved to {}", new File(destinationDir, originalFilename));
+      modelMap.addAttribute("uploadSuccess", "File uploaded successful");
     }
-    log.debug("File saved to {}", new File(destinationDir, multipartFile.getOriginalFilename()));
 
-    return new ModelAndView(
-        new RedirectView("files", true),
-        new ModelMap().addAttribute("uploadSuccess", "File uploaded successful"));
+    return new ModelAndView(new RedirectView("files", true), modelMap);
   }
 
   @GetMapping(value = "/files")
@@ -112,6 +123,7 @@ public class FileServer {
     File changeIndicatorFile = new File(destinationDir, username + "_changed");
     if (changeIndicatorFile.exists()) {
       modelAndView.addObject("uploadSuccess", request.getParameter("uploadSuccess"));
+      modelAndView.addObject("uploadFailure", request.getParameter("uploadFailure"));
     }
     changeIndicatorFile.delete();
 
