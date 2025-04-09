@@ -150,12 +150,13 @@ public class SqlInjectionLesson8 extends AssignmentEndpoint {
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     String time = sdf.format(cal.getTime());
 
-    String logQuery =
-        "INSERT INTO access_log (time, action) VALUES ('" + time + "', '" + action + "')";
-
     try {
-      Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
-      statement.executeUpdate(logQuery);
+      PreparedStatement preparedStatement = connection.prepareStatement(
+          "INSERT INTO access_log (time, action) VALUES (?, ?)",
+          TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
+      preparedStatement.setString(1, time);
+      preparedStatement.setString(2, action);
+      preparedStatement.executeUpdate();
     } catch (SQLException e) {
       System.err.println(e.getMessage());
     }
