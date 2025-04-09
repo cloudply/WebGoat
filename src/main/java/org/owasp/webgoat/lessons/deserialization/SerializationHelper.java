@@ -15,7 +15,7 @@ public class SerializationHelper {
 
   public static Object fromString(String s) throws IOException, ClassNotFoundException {
     byte[] data = Base64.getDecoder().decode(s);
-    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
+    ObjectInputStream ois = new ValidatingObjectInputStream(new ByteArrayInputStream(data));
     Object o = ois.readObject();
     ois.close();
     return o;
@@ -47,5 +47,24 @@ public class SerializationHelper {
       hexChars[j * 2 + 1] = hexArray[v & 0x0F];
     }
     return new String(hexChars);
+  }
+  
+  // Custom ObjectInputStream that only deserializes specific classes
+  private static class ValidatingObjectInputStream extends ObjectInputStream {
+    public ValidatingObjectInputStream(ByteArrayInputStream inputStream) throws IOException {
+      super(inputStream);
+    }
+    
+    @Override
+    protected Class<?> resolveClass(java.io.ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+      // Only allow specific classes to be deserialized
+      String className = desc.getName();
+      if (className.startsWith("java.lang.") || 
+          className.startsWith("java.util.") ||
+          className.startsWith("org.owasp.webgoat.lessons.")) {
+        return super.resolveClass(desc);
+      }
+      throw new ClassNotFoundException("Unauthorized deserialization attempt: " + className);
+    }
   }
 }
