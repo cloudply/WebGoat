@@ -71,6 +71,10 @@ public class ProfileZipSlip extends ProfileUploadBase {
       while (entries.hasMoreElements()) {
         ZipEntry e = entries.nextElement();
         File f = new File(tmpZipDirectory.toFile(), e.getName());
+        // Fix for Zip Slip vulnerability - validate the file path
+        if (!f.toPath().normalize().startsWith(tmpZipDirectory)) {
+          throw new IOException("Entry is outside of the target directory: " + e.getName());
+        }
         InputStream is = zip.getInputStream(e);
         Files.copy(is, f.toPath(), StandardCopyOption.REPLACE_EXISTING);
       }
