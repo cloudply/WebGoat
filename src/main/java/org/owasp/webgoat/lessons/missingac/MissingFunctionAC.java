@@ -25,12 +25,31 @@ package org.owasp.webgoat.lessons.missingac;
 import org.owasp.webgoat.container.lessons.Category;
 import org.owasp.webgoat.container.lessons.Lesson;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
 
 @Component
-public class MissingFunctionAC extends Lesson {
+public class MissingFunctionAC extends Lesson implements ApplicationListener<ContextRefreshedEvent> {
 
   public static final String PASSWORD_SALT_SIMPLE = "DeliberatelyInsecure1234";
-  public static final String PASSWORD_SALT_ADMIN = "DeliberatelyInsecure1235";
+  
+  // Keep the constant for backward compatibility but initialize it from configuration
+  public static String PASSWORD_SALT_ADMIN = "DeliberatelyInsecure1235";
+  
+  @Autowired
+  private Environment environment;
+  
+  @Override
+  public void onApplicationEvent(ContextRefreshedEvent event) {
+    // Try to get the value from environment/properties, fallback to default if not found
+    String configuredSalt = environment.getProperty("webgoat.password.salt.admin");
+    if (configuredSalt != null && !configuredSalt.isEmpty()) {
+      PASSWORD_SALT_ADMIN = configuredSalt;
+    }
+  }
 
   @Override
   public Category getDefaultCategory() {
