@@ -7,11 +7,11 @@ function login(user) {
         type: 'POST',
         url: 'JWT/refresh/login',
         contentType: "application/json",
-        data: JSON.stringify({user: user, password: "bm5nhSkxCXZkKRy4"})
+        data: JSON.stringify({user: user, password: process.env.PASSWORD})
     }).success(
         function (response) {
             localStorage.setItem('access_token', response['access_token']);
-            localStorage.setItem('refresh_token', response['refresh_token']);
+            localStorage.setItem('refreshToken', response['refresh_token']);
         }
     )
 }
@@ -32,11 +32,11 @@ function newToken() {
         },
         type: 'POST',
         url: 'JWT/refresh/newToken',
-        data: JSON.stringify({refreshToken: localStorage.getItem('refresh_token')})
+        data: JSON.stringify({refreshToken: localStorage.getItem('refreshToken')})
     }).success(
         function () {
-            localStorage.setItem('access_token', apiToken);
-            localStorage.setItem('refresh_token', refreshToken);
+            localStorage.setItem('access_token', response['access_token']);
+            localStorage.setItem('refreshToken', response['refresh_token']);
         }
     )
 }
