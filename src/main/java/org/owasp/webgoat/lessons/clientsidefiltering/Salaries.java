@@ -76,6 +76,11 @@ public class Salaries {
     NodeList nodes = null;
     File d = new File(webGoatHomeDirectory, "ClientSideFiltering/employees.xml");
     XPathFactory factory = XPathFactory.newInstance();
+    try {
+      factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+    } catch (XPathFactoryConfigurationException e) {
+      log.error("Error setting XPath factory feature", e);
+    }
     XPath path = factory.newXPath();
     int columns = 5;
     List<Map<String, Object>> json = new ArrayList<>();
