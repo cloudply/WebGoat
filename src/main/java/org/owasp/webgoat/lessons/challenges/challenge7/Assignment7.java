@@ -31,7 +31,9 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class Assignment7 extends AssignmentEndpoint {
 
-  public static final String ADMIN_PASSWORD_LINK = "375afe1104f4a487a73823c50a9292a2";
+  // Retrieve secrets from a secure location at runtime
+  @Value("${admin.password.link}")
+  private String adminPasswordLink;
 
   private static final String TEMPLATE =
       "Hi, you requested a password reset link, please use this <a target='_blank'"
@@ -57,13 +59,13 @@ public class Assignment7 extends AssignmentEndpoint {
 
   @GetMapping("/challenge/7/reset-password/{link}")
   public ResponseEntity<String> resetPassword(@PathVariable(value = "link") String link) {
-    if (link.equals(ADMIN_PASSWORD_LINK)) {
+    if (link.equals(adminPasswordLink)) {
       return ResponseEntity.accepted()
           .body(
               "<h1>Success!!</h1>"
                   + "<img src='/WebGoat/images/hi-five-cat.jpg'>"
                   + "<br/><br/>Here is your flag: "
-                  + flags.getFlag(7));
+                  + flags.getFlag(7).toString());
     }
     return ResponseEntity.status(HttpStatus.I_AM_A_TEAPOT)
         .body("That is not the reset link for admin");
@@ -84,7 +86,7 @@ public class Assignment7 extends AssignmentEndpoint {
                     String.format(
                         TEMPLATE,
                         uri.getScheme() + "://" + uri.getHost(),
-                        new PasswordResetLink().createPasswordReset(username, "webgoat")))
+                        new PasswordResetLink().createPasswordReset(username, adminPasswordLink)))
                 .sender("password-reset@webgoat-cloud.net")
                 .recipient(username)
                 .time(LocalDateTime.now())
