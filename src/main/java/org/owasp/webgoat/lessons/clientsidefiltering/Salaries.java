@@ -36,6 +36,11 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -82,10 +87,15 @@ public class Salaries {
     java.util.Map<String, Object> employeeJson = new HashMap<>();
 
     try (InputStream is = new FileInputStream(d)) {
-      InputSource inputSource = new InputSource(is);
+      // Secure XML parser configuration to prevent XXE
+      DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+      dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+      dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
+      dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+      DocumentBuilder db = dbf.newDocumentBuilder();
+      Document doc = db.parse(is);
 
       StringBuilder sb = new StringBuilder();
-
       sb.append("/Employees/Employee/UserID | ");
       sb.append("/Employees/Employee/FirstName | ");
       sb.append("/Employees/Employee/LastName | ");
@@ -93,7 +103,7 @@ public class Salaries {
       sb.append("/Employees/Employee/Salary ");
 
       String expression = sb.toString();
-      nodes = (NodeList) path.evaluate(expression, inputSource, XPathConstants.NODESET);
+      nodes = (NodeList) path.evaluate(expression, doc, XPathConstants.NODESET);
       for (int i = 0; i < nodes.getLength(); i++) {
         if (i % columns == 0) {
           employeeJson = new HashMap<>();
@@ -102,10 +112,12 @@ public class Salaries {
         Node node = nodes.item(i);
         employeeJson.put(node.getNodeName(), node.getTextContent());
       }
-    } catch (XPathExpressionException e) {
-      log.error("Unable to parse xml", e);
+    } catch (XPathExpressionException | ParserConfigurationException | SAXException e) {
+      log.error("XML parsing error", e);
     } catch (IOException e) {
       log.error("Unable to read employees.xml at location: '{}'", d);
+    } catch (Exception e) {
+      log.error("Unexpected error processing salaries", e);
     }
     return json;
   }
