@@ -41,12 +41,21 @@ public class SSRFTask2 extends AssignmentEndpoint {
 
   @PostMapping("/SSRF/task2")
   @ResponseBody
-  public AttackResult completed(@RequestParam String url) {
-    return furBall(url);
+  public AttackResult completed(@RequestParam("url") String url) {
+    if(url == null || url.isEmpty()) {
+      return getFailedResult("URL is empty");
+    }
+    try {
+      return furBall(url);
+    } catch (Exception e) {
+      return getFailedResult(e.getMessage());
+    }
   }
 
+  private static final String VALID_URI = "http://ifconfig.pro";
+  
   protected AttackResult furBall(String url) {
-    if (url.matches("http://ifconfig\\.pro")) {
+    if (VALID_URI.equals(url)) {
       String html;
       try (InputStream in = new URL(url).openStream()) {
         html =
