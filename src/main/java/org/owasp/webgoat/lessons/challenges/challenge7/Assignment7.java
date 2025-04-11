@@ -1,5 +1,6 @@
 package org.owasp.webgoat.lessons.challenges.challenge7;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -31,7 +32,15 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class Assignment7 extends AssignmentEndpoint {
 
-  public static final String ADMIN_PASSWORD_LINK = "375afe1104f4a487a73823c50a9292a2";
+  public static String ADMIN_PASSWORD_LINK;
+  
+  @Value("${webgoat.challenge.7.admin-link}")
+  private String adminPasswordLink;
+  
+  @PostConstruct
+  public void init() {
+    ADMIN_PASSWORD_LINK = adminPasswordLink;
+  }
 
   private static final String TEMPLATE =
       "Hi, you requested a password reset link, please use this <a target='_blank'"
