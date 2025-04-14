@@ -24,6 +24,7 @@ package org.owasp.webgoat.webwolf;
 
 import static java.util.Comparator.comparing;
 import static org.springframework.http.MediaType.ALL_VALUE;
+import org.apache.commons.io.FilenameUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.File;
@@ -90,7 +91,7 @@ public class FileServer {
     // DO NOT use multipartFile.transferTo(), see
     // https://stackoverflow.com/questions/60336929/java-nio-file-nosuchfileexception-when-file-transferto-is-called
     try (InputStream is = multipartFile.getInputStream()) {
-      var destinationFile = destinationDir.toPath().resolve(multipartFile.getOriginalFilename());
+      var destinationFile = destinationDir.toPath().resolve(FilenameUtils.getName(multipartFile.getOriginalFilename()));
       Files.deleteIfExists(destinationFile);
       Files.copy(is, destinationFile);
     }
