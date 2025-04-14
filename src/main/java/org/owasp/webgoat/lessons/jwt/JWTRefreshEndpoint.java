@@ -22,6 +22,7 @@
 
 package org.owasp.webgoat.lessons.jwt;
 
+import java.security.SecureRandom;
 import static org.springframework.http.ResponseEntity.ok;
 
 import io.jsonwebtoken.Claims;
@@ -89,7 +90,10 @@ public class JWTRefreshEndpoint extends AssignmentEndpoint {
             .signWith(io.jsonwebtoken.SignatureAlgorithm.HS512, JWT_PASSWORD)
             .compact();
     Map<String, Object> tokenJson = new HashMap<>();
-    String refreshToken = RandomStringUtils.randomAlphabetic(20);
+    SecureRandom secureRandom = new SecureRandom();
+    byte[] refreshTokenBytes = new byte[20];
+    secureRandom.nextBytes(refreshTokenBytes);
+    String refreshToken = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(refreshTokenBytes);
     validRefreshTokens.add(refreshToken);
     tokenJson.put("access_token", token);
     tokenJson.put("refresh_token", refreshToken);
