@@ -175,6 +175,9 @@ public class MD5 {
    * @since ostermillerutils 1.00.00
    */
   public static String getHashString(File f) throws IOException {
+    if (f == null || f.getAbsolutePath().contains("..") || f.getAbsolutePath().contains("/")) {
+        throw new IllegalArgumentException("Invalid filename");
+    }
     String hash = null;
     try (InputStream is = new FileInputStream(f)) {
       hash = getHashString(is);
