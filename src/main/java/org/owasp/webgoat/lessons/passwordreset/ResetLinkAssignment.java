@@ -31,6 +31,7 @@ import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
 import org.owasp.webgoat.container.assignments.AttackResult;
 import org.owasp.webgoat.lessons.passwordreset.resetlink.PasswordChangeForm;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -58,8 +59,8 @@ import org.springframework.web.servlet.ModelAndView;
 public class ResetLinkAssignment extends AssignmentEndpoint {
 
   private static final String VIEW_FORMATTER = "lessons/passwordreset/templates/%s.html";
-  static final String PASSWORD_TOM_9 =
-      "somethingVeryRandomWhichNoOneWillEverTypeInAsPasswordForTom";
+  @Value("${webgoat.user.tom.password:defaultSecretPassword}")
+  private String passwordTom;
   static final String TOM_EMAIL = "tom@webgoat-cloud.org";
   static Map<String, String> userToTomResetLink = new HashMap<>();
   static Map<String, String> usersToTomPassword = Maps.newHashMap();
@@ -83,11 +84,11 @@ public class ResetLinkAssignment extends AssignmentEndpoint {
   @ResponseBody
   public AttackResult login(@RequestParam String password, @RequestParam String email) {
     if (TOM_EMAIL.equals(email)) {
-      String passwordTom =
-          usersToTomPassword.getOrDefault(getWebSession().getUserName(), PASSWORD_TOM_9);
-      if (passwordTom.equals(PASSWORD_TOM_9)) {
+      String passwordTomUser =
+          usersToTomPassword.getOrDefault(getWebSession().getUserName(), passwordTom);
+      if (passwordTomUser.equals(passwordTom)) {
         return failed(this).feedback("login_failed").build();
-      } else if (passwordTom.equals(password)) {
+      } else if (passwordTomUser.equals(password)) {
         return success(this).build();
       }
     }
