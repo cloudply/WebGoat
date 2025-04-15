@@ -29,6 +29,10 @@ public class CryptoUtil {
     BigInteger.valueOf(257),
     BigInteger.valueOf(65537)
   };
+  
+  // Define constants for PEM format markers
+  private static final String PEM_PRIVATE_KEY_BEGIN = "-----BEGIN PRIVATE KEY-----";
+  private static final String PEM_PRIVATE_KEY_END = "-----END PRIVATE KEY-----";
 
   public static KeyPair generateKeyPair()
       throws NoSuchAlgorithmException, InvalidAlgorithmParameterException {
@@ -42,14 +46,14 @@ public class CryptoUtil {
   }
 
   public static String getPrivateKeyInPEM(KeyPair keyPair) {
-    String encodedString = "-----BEGIN PRIVATE KEY-----\n";
+    String encodedString = PEM_PRIVATE_KEY_BEGIN + "\n";
     encodedString =
         encodedString
             + new String(
                 Base64.getEncoder().encode(keyPair.getPrivate().getEncoded()),
                 Charset.forName("UTF-8"))
             + "\n";
-    encodedString = encodedString + "-----END PRIVATE KEY-----\n";
+    encodedString = encodedString + PEM_PRIVATE_KEY_END + "\n";
     return encodedString;
   }
 
@@ -130,8 +134,8 @@ public class CryptoUtil {
 
   public static PrivateKey getPrivateKeyFromPEM(String privateKeyPem)
       throws NoSuchAlgorithmException, InvalidKeySpecException {
-    privateKeyPem = privateKeyPem.replace("-----BEGIN PRIVATE KEY-----", "");
-    privateKeyPem = privateKeyPem.replace("-----END PRIVATE KEY-----", "");
+    privateKeyPem = privateKeyPem.replace(PEM_PRIVATE_KEY_BEGIN, "");
+    privateKeyPem = privateKeyPem.replace(PEM_PRIVATE_KEY_END, "");
     privateKeyPem = privateKeyPem.replace("\n", "").replace("\r", "");
 
     byte[] decoded = Base64.getDecoder().decode(privateKeyPem);
