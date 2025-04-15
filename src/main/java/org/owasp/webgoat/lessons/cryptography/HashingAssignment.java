@@ -30,6 +30,7 @@ import javax.xml.bind.DatatypeConverter;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
 import org.owasp.webgoat.container.assignments.AttackResult;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,6 +42,10 @@ import org.springframework.web.bind.annotation.RestController;
 @AssignmentHints({"crypto-hashing.hints.1", "crypto-hashing.hints.2"})
 public class HashingAssignment extends AssignmentEndpoint {
 
+  @Value("${webgoat.crypto.secrets:secret,admin,password,123456,passw0rd}")
+  private String[] secrets;
+  
+  // Keep this for backward compatibility with EncodingAssignment
   public static final String[] SECRETS = {"secret", "admin", "password", "123456", "passw0rd"};
 
   @RequestMapping(path = "/crypto/hashing/md5", produces = MediaType.TEXT_HTML_VALUE)
@@ -50,7 +55,7 @@ public class HashingAssignment extends AssignmentEndpoint {
     String md5Hash = (String) request.getSession().getAttribute("md5Hash");
     if (md5Hash == null) {
 
-      String secret = SECRETS[new Random().nextInt(SECRETS.length)];
+      String secret = secrets[new Random().nextInt(secrets.length)];
 
       MessageDigest md = MessageDigest.getInstance("MD5");
       md.update(secret.getBytes());
@@ -68,7 +73,7 @@ public class HashingAssignment extends AssignmentEndpoint {
 
     String sha256 = (String) request.getSession().getAttribute("sha256");
     if (sha256 == null) {
-      String secret = SECRETS[new Random().nextInt(SECRETS.length)];
+      String secret = secrets[new Random().nextInt(secrets.length)];
       sha256 = getHash(secret, "SHA-256");
       request.getSession().setAttribute("sha256Hash", sha256);
       request.getSession().setAttribute("sha256Secret", secret);

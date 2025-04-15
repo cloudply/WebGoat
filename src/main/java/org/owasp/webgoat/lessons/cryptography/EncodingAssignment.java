@@ -27,6 +27,7 @@ import java.util.Base64;
 import java.util.Random;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AttackResult;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,6 +37,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class EncodingAssignment extends AssignmentEndpoint {
+
+  @Value("${webgoat.crypto.secrets:secret,admin,password,123456,passw0rd}")
+  private String[] secrets;
 
   public static String getBasicAuth(String username, String password) {
     return Base64.getEncoder().encodeToString(username.concat(":").concat(password).getBytes());
@@ -48,8 +52,7 @@ public class EncodingAssignment extends AssignmentEndpoint {
     String basicAuth = (String) request.getSession().getAttribute("basicAuth");
     String username = request.getUserPrincipal().getName();
     if (basicAuth == null) {
-      String password =
-          HashingAssignment.SECRETS[new Random().nextInt(HashingAssignment.SECRETS.length)];
+      String password = secrets[new Random().nextInt(secrets.length)];
       basicAuth = getBasicAuth(username, password);
       request.getSession().setAttribute("basicAuth", basicAuth);
     }
