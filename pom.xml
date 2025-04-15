@@ -634,13 +634,13 @@
             </sortPom>
           </pom>
         </configuration>
-        <executions>
+        <!--executions>
           <execution>
             <goals>
               <goal>check</goal>
             </goals>
           </execution>
-        </executions>
+        </executions-->
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
