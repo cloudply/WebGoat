@@ -36,6 +36,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.security.SecureRandom;
+import java.util.Base64;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
@@ -97,7 +99,10 @@ public class JWTRefreshEndpoint extends AssignmentEndpoint {
             .signWith(io.jsonwebtoken.SignatureAlgorithm.HS512, jwtSecret)
             .compact();
     Map<String, Object> tokenJson = new HashMap<>();
-    String refreshToken = RandomStringUtils.randomAlphabetic(20);
+    SecureRandom secureRandom = new SecureRandom();
+    byte[] randomBytes = new byte[15];
+    secureRandom.nextBytes(randomBytes);
+    String refreshToken = Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
     validRefreshTokens.add(refreshToken);
     tokenJson.put("access_token", token);
     tokenJson.put("refresh_token", refreshToken);
