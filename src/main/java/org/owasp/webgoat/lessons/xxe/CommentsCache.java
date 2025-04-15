@@ -105,6 +105,10 @@ public class CommentsCache {
     var xsr = xif.createXMLStreamReader(new StringReader(xml));
 
     var unmarshaller = jc.createUnmarshaller();
+    // Fix for XXE vulnerability - disable DTD processing in unmarshaller
+    unmarshaller.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+    unmarshaller.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+    
     return (Comment) unmarshaller.unmarshal(xsr);
   }
 
