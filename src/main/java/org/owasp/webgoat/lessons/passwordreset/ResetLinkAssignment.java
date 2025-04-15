@@ -58,8 +58,8 @@ import org.springframework.web.servlet.ModelAndView;
 public class ResetLinkAssignment extends AssignmentEndpoint {
 
   private static final String VIEW_FORMATTER = "lessons/passwordreset/templates/%s.html";
-  static final String PASSWORD_TOM_9 =
-      "somethingVeryRandomWhichNoOneWillEverTypeInAsPasswordForTom";
+  // Retrieve secrets from a secure location at runtime
+  static final String PASSWORD_TOM_9 = System.getenv("PASSWORD_TOM_9");
   static final String TOM_EMAIL = "tom@webgoat-cloud.org";
   static Map<String, String> userToTomResetLink = new HashMap<>();
   static Map<String, String> usersToTomPassword = Maps.newHashMap();
