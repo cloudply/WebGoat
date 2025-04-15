@@ -24,6 +24,7 @@ package org.owasp.webgoat.lessons.sqlinjection.introduction;
 
 import jakarta.annotation.PostConstruct;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -74,14 +75,17 @@ public class SqlInjectionLesson5 extends AssignmentEndpoint {
 
   protected AttackResult injectableQuery(String query) {
     try (Connection connection = dataSource.getConnection()) {
-      try (Statement statement =
-          connection.createStatement(
-              ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
-        statement.executeQuery(query);
-        if (checkSolution(connection)) {
-          return success(this).build();
+      try (PreparedStatement statement =
+          connection.prepareStatement(
+              "SELECT * FROM INFORMATION_SCHEMA.TABLE_PRIVILEGES WHERE TABLE_NAME = ? AND GRANTEE = ?")) {
+        statement.setString(1, "GRANT_RIGHTS");
+        statement.setString(2, "UNAUTHORIZED_USER");
+        try (ResultSet resultSet = statement.executeQuery()) {
+          if (resultSet.next()) {
+            return success(this).build();
+          }
+          return failed(this).output("Your query was: " + query).build();
         }
-        return failed(this).output("Your query was: " + query).build();
       }
     } catch (Exception e) {
       return failed(this)
