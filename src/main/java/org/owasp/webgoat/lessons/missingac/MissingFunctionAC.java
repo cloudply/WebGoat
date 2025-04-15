@@ -29,6 +29,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class MissingFunctionAC extends Lesson {
 
+  // secrets should be stored securely and retrieved at runtime
+  // for demonstration purposes, we will use environment variables
+  // secrets should be stored securely and retrieved at runtime
+  // for demonstration purposes, we will use environment variables
+  // for testing purposes, use hardcoded values
   public static final String PASSWORD_SALT_SIMPLE = "DeliberatelyInsecure1234";
   // TODO: Retrieve secrets from a secure location at runtime
   // public static final String PASSWORD_SALT_ADMIN = System.getenv("PASSWORD_SALT_ADMIN");
