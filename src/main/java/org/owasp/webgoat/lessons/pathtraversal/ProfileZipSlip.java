@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -70,7 +71,14 @@ public class ProfileZipSlip extends ProfileUploadBase {
       Enumeration<? extends ZipEntry> entries = zip.entries();
       while (entries.hasMoreElements()) {
         ZipEntry e = entries.nextElement();
-        File f = new File(tmpZipDirectory.toFile(), e.getName());
+        Path targetPath = tmpZipDirectory.resolve(e.getName()).normalize();
+        
+        // Validate that the normalized path doesn't escape the target directory
+        if (!targetPath.startsWith(tmpZipDirectory)) {
+          continue; // Skip this entry as it's trying to escape the target directory
+        }
+        
+        File f = targetPath.toFile();
         InputStream is = zip.getInputStream(e);
         Files.copy(is, f.toPath(), StandardCopyOption.REPLACE_EXISTING);
       }
