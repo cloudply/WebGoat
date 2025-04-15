@@ -68,10 +68,11 @@ public class SqlInjectionLesson6a extends AssignmentEndpoint {
       if (!accountName.matches("(?i)(^[^-/*;)]*)(\\s*)UNION(.*$)")) {
         usedUnion = false;
       }
-      try (Statement statement =
-          connection.createStatement(
-              ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
-        ResultSet results = statement.executeQuery(query);
+      try (PreparedStatement statement =
+          connection.prepareStatement(
+              "SELECT * FROM user_data WHERE last_name = ?")) {
+        statement.setString(1, accountName);
+        ResultSet results = statement.executeQuery();
 
         if ((results != null) && results.first()) {
           ResultSetMetaData resultsMetaData = results.getMetaData();
