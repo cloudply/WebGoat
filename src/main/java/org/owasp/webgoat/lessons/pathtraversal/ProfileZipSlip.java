@@ -63,7 +63,11 @@ public class ProfileZipSlip extends ProfileUploadBase {
     var currentImage = getProfilePictureAsBase64();
 
     try {
-      var uploadedZipFile = tmpZipDirectory.resolve(file.getOriginalFilename());
+      String fileName = file.getOriginalFilename();
+      if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) {
+        return failed(this).feedback("path-traversal-zip-slip.invalid-filename").build();
+      }
+      var uploadedZipFile = tmpZipDirectory.resolve(fileName);
       FileCopyUtils.copy(file.getBytes(), uploadedZipFile.toFile());
 
       ZipFile zip = new ZipFile(uploadedZipFile.toFile());
