@@ -29,6 +29,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import org.owasp.webgoat.container.LessonDataSource;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
@@ -57,9 +58,9 @@ public class SqlInjectionLesson4 extends AssignmentEndpoint {
 
   protected AttackResult injectableQuery(String query) {
     try (Connection connection = dataSource.getConnection()) {
-      try (Statement statement =
-          connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY)) {
-        statement.executeUpdate(query);
+      try (PreparedStatement statement = connection.prepareStatement(query, 
+          TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY)) {
+        statement.executeUpdate();
         connection.commit();
         ResultSet results = statement.executeQuery("SELECT phone from employees;");
         StringBuilder output = new StringBuilder();
