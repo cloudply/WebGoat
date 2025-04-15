@@ -70,7 +70,11 @@ public class ProfileZipSlip extends ProfileUploadBase {
       Enumeration<? extends ZipEntry> entries = zip.entries();
       while (entries.hasMoreElements()) {
         ZipEntry e = entries.nextElement();
-        File f = new File(tmpZipDirectory.toFile(), e.getName());
+        String fileName = e.getName();
+        if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) {
+          throw new IllegalArgumentException("Invalid filename");
+        }
+        File f = new File(tmpZipDirectory.toFile(), fileName);
         InputStream is = zip.getInputStream(e);
         Files.copy(is, f.toPath(), StandardCopyOption.REPLACE_EXISTING);
       }
