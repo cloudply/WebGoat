@@ -36,6 +36,11 @@ public class ProfileUploadBase extends AssignmentEndpoint {
       return failed(this).feedback("path-traversal-profile-empty-name").build();
     }
 
+    // Validate that the fullName doesn't contain path traversal sequences
+    if (fullName.contains("..") || fullName.contains("/") || fullName.contains("\\")) {
+      return failed(this).feedback("path-traversal-profile-invalid-name").build();
+    }
+
     File uploadDirectory = cleanupAndCreateDirectoryForUser();
 
     try {

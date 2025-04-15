@@ -24,6 +24,9 @@ package org.owasp.webgoat.lessons.sqlinjection.mitigation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +48,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class Servers {
 
   private final LessonDataSource dataSource;
+  private static final Set<String> ALLOWED_COLUMNS = new HashSet<>(
+      Arrays.asList("id", "hostname", "ip", "mac", "status", "description"));
 
   @AllArgsConstructor
   @Getter
@@ -67,12 +72,15 @@ public class Servers {
   public List<Server> sort(@RequestParam String column) throws Exception {
     List<Server> servers = new ArrayList<>();
 
+    // Validate column name against whitelist
+    if (!ALLOWED_COLUMNS.contains(column)) {
+      column = "id"; // Default to a safe column if not in whitelist
+    }
+
     try (var connection = dataSource.getConnection()) {
       try (var statement =
           connection.prepareStatement(
-              "select id, hostname, ip, mac, status, description from SERVERS where status <> 'out"
-                  + " of order' order by "
-                  + column)) {
+              "select id, hostname, ip, mac, status, description from SERVERS where status <> 'out of order' order by " + column)) {
         try (var rs = statement.executeQuery()) {
           while (rs.next()) {
             Server server =
