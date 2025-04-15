@@ -39,6 +39,9 @@ public class ProfileUploadBase extends AssignmentEndpoint {
     File uploadDirectory = cleanupAndCreateDirectoryForUser();
 
     try {
+      if (fullName.contains("..") || fullName.contains("/") || fullName.contains("\\")) {
+        return failed(this).feedback("path-traversal-profile-invalid-name").build();
+      }
       var uploadedFile = new File(uploadDirectory, fullName);
       uploadedFile.createNewFile();
       FileCopyUtils.copy(file.getBytes(), uploadedFile);
