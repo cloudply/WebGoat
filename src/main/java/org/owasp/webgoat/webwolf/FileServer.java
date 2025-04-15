@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -90,7 +91,17 @@ public class FileServer {
     // DO NOT use multipartFile.transferTo(), see
     // https://stackoverflow.com/questions/60336929/java-nio-file-nosuchfileexception-when-file-transferto-is-called
     try (InputStream is = multipartFile.getInputStream()) {
-      var destinationFile = destinationDir.toPath().resolve(multipartFile.getOriginalFilename());
+      String originalFilename = multipartFile.getOriginalFilename();
+      // Validate filename to prevent path traversal attacks
+      if (originalFilename == null || originalFilename.contains("..") || 
+          originalFilename.contains("/") || originalFilename.contains("\\")) {
+        throw new IllegalArgumentException("Invalid filename");
+      }
+      var destinationFile = destinationDir.toPath().resolve(originalFilename);
+      // Additional check to ensure the resolved path is within the destination directory
+      if (!destinationFile.normalize().toAbsolutePath().startsWith(destinationDir.toPath().normalize().toAbsolutePath())) {
+        throw new IllegalArgumentException("Path traversal attempt detected");
+      }
       Files.deleteIfExists(destinationFile);
       Files.copy(is, destinationFile);
     }
