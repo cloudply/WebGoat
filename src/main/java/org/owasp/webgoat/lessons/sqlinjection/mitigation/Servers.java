@@ -24,6 +24,8 @@ package org.owasp.webgoat.lessons.sqlinjection.mitigation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +47,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class Servers {
 
   private final LessonDataSource dataSource;
+  private final Map<String, String> allowedColumns = new HashMap<>();
 
   @AllArgsConstructor
   @Getter
@@ -60,6 +63,13 @@ public class Servers {
 
   public Servers(LessonDataSource dataSource) {
     this.dataSource = dataSource;
+    // Initialize allowed column names
+    allowedColumns.put("id", "id");
+    allowedColumns.put("hostname", "hostname");
+    allowedColumns.put("ip", "ip");
+    allowedColumns.put("mac", "mac");
+    allowedColumns.put("status", "status");
+    allowedColumns.put("description", "description");
   }
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -67,12 +77,15 @@ public class Servers {
   public List<Server> sort(@RequestParam String column) throws Exception {
     List<Server> servers = new ArrayList<>();
 
+    // Validate column parameter against whitelist
+    String validatedColumn = allowedColumns.getOrDefault(column, "id");
+
     try (var connection = dataSource.getConnection()) {
       try (var statement =
           connection.prepareStatement(
               "select id, hostname, ip, mac, status, description from SERVERS where status <> 'out"
                   + " of order' order by "
-                  + column)) {
+                  + validatedColumn)) {
         try (var rs = statement.executeQuery()) {
           while (rs.next()) {
             Server server =
