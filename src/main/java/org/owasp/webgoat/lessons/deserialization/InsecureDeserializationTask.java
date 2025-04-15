@@ -26,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
+import java.io.ObjectInputFilter;
 import java.util.Base64;
 import org.dummy.insecure.framework.VulnerableTaskHolder;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
@@ -55,7 +56,7 @@ public class InsecureDeserializationTask extends AssignmentEndpoint {
     b64token = token.replace('-', '+').replace('_', '/');
 
     try (ObjectInputStream ois =
-        new ObjectInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(b64token)))) {
+        createSafeObjectInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(b64token)))) {
       before = System.currentTimeMillis();
       Object o = ois.readObject();
       if (!(o instanceof VulnerableTaskHolder)) {
@@ -81,5 +82,23 @@ public class InsecureDeserializationTask extends AssignmentEndpoint {
       return failed(this).build();
     }
     return success(this).build();
+  }
+  
+  private ObjectInputStream createSafeObjectInputStream(ByteArrayInputStream inputStream) throws IOException {
+    ObjectInputStream ois = new ObjectInputStream(inputStream);
+    ObjectInputFilter filter = filterInfo -> {
+      Class<?> clazz = filterInfo.serialClass();
+      if (clazz != null) {
+        // Only allow VulnerableTaskHolder and basic Java types
+        return (clazz.equals(VulnerableTaskHolder.class) || 
+                clazz.getName().startsWith("java.lang.") ||
+                clazz.isPrimitive()) ? 
+               ObjectInputFilter.Status.ALLOWED : 
+               ObjectInputFilter.Status.REJECTED;
+      }
+      return ObjectInputFilter.Status.UNDECIDED;
+    };
+    ois.setObjectInputFilter(filter);
+    return ois;
   }
 }
