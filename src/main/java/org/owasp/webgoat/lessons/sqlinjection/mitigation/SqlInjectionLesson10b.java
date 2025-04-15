@@ -60,7 +60,13 @@ public class SqlInjectionLesson10b extends AssignmentEndpoint {
     try {
       if (editor.isEmpty()) return failed(this).feedback("sql-injection.10b.no-code").build();
 
-      editor = editor.replaceAll("\\<.*?>", "");
+      // Limit input size to prevent ReDoS attacks
+      if (editor.length() > 10000) {
+        return failed(this).feedback("sql-injection.10b.too-long").build();
+      }
+      
+      // Fixed regex to avoid polynomial backtracking
+      editor = editor.replaceAll("<[^>]*>", "");
 
       String regexSetsUpConnection = "(?=.*getConnection.*)";
       String regexUsesPreparedStatement = "(?=.*PreparedStatement.*)";
