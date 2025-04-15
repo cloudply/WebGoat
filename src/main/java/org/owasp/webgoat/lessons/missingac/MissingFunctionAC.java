@@ -30,7 +30,9 @@ import org.springframework.stereotype.Component;
 public class MissingFunctionAC extends Lesson {
 
   public static final String PASSWORD_SALT_SIMPLE = "DeliberatelyInsecure1234";
-  public static final String PASSWORD_SALT_ADMIN = "DeliberatelyInsecure1235";
+  // TODO: Retrieve secrets from a secure location at runtime
+  // public static final String PASSWORD_SALT_ADMIN = System.getenv("PASSWORD_SALT_ADMIN");
+  public static final String PASSWORD_SALT_ADMIN = System.getenv("PASSWORD_SALT_ADMIN");
 
   @Override
   public Category getDefaultCategory() {
