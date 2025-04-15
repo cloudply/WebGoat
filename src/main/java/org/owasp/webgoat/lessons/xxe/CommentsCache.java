@@ -103,7 +103,10 @@ public class CommentsCache {
     }
 
     var xsr = xif.createXMLStreamReader(new StringReader(xml));
-
+    if (webSession.isSecurityEnabled()) {
+      xif.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, ""); // Compliant
+      xif.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, ""); // compliant
+    }
     var unmarshaller = jc.createUnmarshaller();
     return (Comment) unmarshaller.unmarshal(xsr);
   }
