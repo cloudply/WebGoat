@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.jsonwebtoken.Header;
 import io.jsonwebtoken.JwsHeader;
+import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.impl.TextCodec;
 import io.restassured.RestAssured;
@@ -72,7 +74,7 @@ public class JWTLessonIntegrationTest extends IntegrationTest {
   private String getSecretToken(String token) {
     for (String key : JWTSecretKeyEndpoint.SECRETS) {
       try {
-        Jwt jwt = Jwts.parser().setSigningKey(TextCodec.BASE64.encode(key)).parse(token);
+        Jws<Claims> jwt = Jwts.parser().setSigningKey(TextCodec.BASE64.encode(key)).parseClaimsJws(token);
       } catch (JwtException e) {
         continue;
       }
