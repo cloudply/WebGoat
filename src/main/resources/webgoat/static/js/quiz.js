@@ -31,7 +31,9 @@ $(function () {
                   html += "</fieldset></div>";
                 });
             });
-            document.getElementById("q_container").innerHTML = html;
+            const sanitizeHtml = require('sanitize-html');
+            const sanitizedHtml = sanitizeHtml(html);
+            document.getElementById("q_container").innerHTML = sanitizedHtml;
         }
     }
     client.send();

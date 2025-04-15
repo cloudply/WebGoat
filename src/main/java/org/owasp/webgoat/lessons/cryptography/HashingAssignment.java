@@ -41,7 +41,14 @@ import org.springframework.web.bind.annotation.RestController;
 @AssignmentHints({"crypto-hashing.hints.1", "crypto-hashing.hints.2"})
 public class HashingAssignment extends AssignmentEndpoint {
 
-  public static final String[] SECRETS = {"secret", "admin", "password", "123456", "passw0rd"};
+  // Load secrets from a secure location, such as environment variables or a secrets manager
+  public static final String[] SECRETS = {
+      System.getenv("SECRET_1"),
+      System.getenv("SECRET_2"),
+      System.getenv("SECRET_3"),
+      System.getenv("SECRET_4"),
+      System.getenv("SECRET_5")
+  };
 
   @RequestMapping(path = "/crypto/hashing/md5", produces = MediaType.TEXT_HTML_VALUE)
   @ResponseBody

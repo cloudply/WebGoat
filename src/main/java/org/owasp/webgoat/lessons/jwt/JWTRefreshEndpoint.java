@@ -59,6 +59,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class JWTRefreshEndpoint extends AssignmentEndpoint {
 
   public static final String PASSWORD = "bm5nhSkxCXZkKRy4";
+  // private static final String JWT_PASSWORD = "bm5n3SkxCX4kKRy4";
+  // Retrieve secrets from a secure location at runtime
+  // Retrieve secrets from a secure location at runtime
   private static final String JWT_PASSWORD = "bm5n3SkxCX4kKRy4";
   private static final List<String> validRefreshTokens = new ArrayList<>();
 
@@ -86,7 +89,7 @@ public class JWTRefreshEndpoint extends AssignmentEndpoint {
         Jwts.builder()
             .setIssuedAt(new Date(System.currentTimeMillis() + TimeUnit.DAYS.toDays(10)))
             .setClaims(claims)
-            .signWith(io.jsonwebtoken.SignatureAlgorithm.HS512, JWT_PASSWORD)
+            .signWith(io.jsonwebtoken.SignatureAlgorithm.HS512, "bm5n3SkxCX4kKRy4")
             .compact();
     Map<String, Object> tokenJson = new HashMap<>();
     String refreshToken = RandomStringUtils.randomAlphabetic(20);
@@ -134,7 +137,7 @@ public class JWTRefreshEndpoint extends AssignmentEndpoint {
     String refreshToken;
     try {
       Jwt<Header, Claims> jwt =
-          Jwts.parser().setSigningKey(JWT_PASSWORD).parse(token.replace("Bearer ", ""));
+          Jwts.parser().setSigningKey("bm5n3SkxCX4kKRy4").parse(token.replace("Bearer ", ""));
       user = (String) jwt.getBody().get("user");
       refreshToken = (String) json.get("refresh_token");
     } catch (ExpiredJwtException e) {

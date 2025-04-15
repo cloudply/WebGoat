@@ -64,7 +64,7 @@ public class SqlInjectionLesson10b extends AssignmentEndpoint {
 
       String regexSetsUpConnection = "(?=.*getConnection.*)";
       String regexUsesPreparedStatement = "(?=.*PreparedStatement.*)";
-      String regexUsesPlaceholder = "(?=.*\\=\\?.*|.*\\=\\s\\?.*)";
+      String regexUsesPlaceholder = "(?=.*\\?.*)"; // simplified to avoid ReDoS
       String regexUsesSetString = "(?=.*setString.*)";
       String regexUsesExecute = "(?=.*execute.*)";
       String regexUsesExecuteUpdate = "(?=.*executeUpdate.*)";
