@@ -24,13 +24,27 @@ package org.owasp.webgoat.lessons.missingac;
 
 import org.owasp.webgoat.container.lessons.Category;
 import org.owasp.webgoat.container.lessons.Lesson;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 public class MissingFunctionAC extends Lesson {
 
-  public static final String PASSWORD_SALT_SIMPLE = "DeliberatelyInsecure1234";
-  public static final String PASSWORD_SALT_ADMIN = "DeliberatelyInsecure1235";
+  // Keep these static fields for backward compatibility with existing code
+  public static String PASSWORD_SALT_SIMPLE;
+  public static String PASSWORD_SALT_ADMIN;
+
+  @Value("${webgoat.password.salt.simple:}")
+  private void setPasswordSaltSimple(String value) {
+    // If no value is provided in properties, use a default value
+    PASSWORD_SALT_SIMPLE = (value != null && !value.isEmpty()) ? value : "DeliberatelyInsecure1234";
+  }
+  
+  @Value("${webgoat.password.salt.admin:}")
+  private void setPasswordSaltAdmin(String value) {
+    // If no value is provided in properties, use a default value
+    PASSWORD_SALT_ADMIN = (value != null && !value.isEmpty()) ? value : "DeliberatelyInsecureAdmin1234";
+  }
 
   @Override
   public Category getDefaultCategory() {
