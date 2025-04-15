@@ -27,6 +27,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import org.owasp.webgoat.container.LessonDataSource;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
@@ -74,10 +75,12 @@ public class SqlInjectionLesson5 extends AssignmentEndpoint {
 
   protected AttackResult injectableQuery(String query) {
     try (Connection connection = dataSource.getConnection()) {
-      try (Statement statement =
-          connection.createStatement(
-              ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
-        statement.executeQuery(query);
+      try (PreparedStatement statement =
+          connection.prepareStatement(
+              query,
+              ResultSet.TYPE_SCROLL_INSENSITIVE, 
+              ResultSet.CONCUR_UPDATABLE)) {
+        statement.executeQuery();
         if (checkSolution(connection)) {
           return success(this).build();
         }
