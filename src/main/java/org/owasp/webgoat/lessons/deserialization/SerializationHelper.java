@@ -13,12 +13,36 @@ public class SerializationHelper {
 
   private static final char[] hexArray = "0123456789ABCDEF".toCharArray();
 
+  private static final int MAX_BYTES = 8192;
+  private static final Set<String> ALLOWED_CLASSES = Set.of(
+      "org.dummy.insecure.framework.VulnerableTaskHolder"
+  );
+  
   public static Object fromString(String s) throws IOException, ClassNotFoundException {
+    if (s == null || s.length() > MAX_BYTES) {
+      throw new IllegalArgumentException("Invalid input size");
+    }
+    
     byte[] data = Base64.getDecoder().decode(s);
-    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
-    Object o = ois.readObject();
-    ois.close();
-    return o;
+    try (ObjectInputStream ois = new ValidatingObjectInputStream(
+        new ByteArrayInputStream(data))) {
+      return ois.readObject();
+    }
+  }
+  
+  private static class ValidatingObjectInputStream extends ObjectInputStream {
+    protected ValidatingObjectInputStream(InputStream in) throws IOException {
+      super(in);
+    }
+    
+    @Override
+    protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+      String className = desc.getName();
+      if (!ALLOWED_CLASSES.contains(className)) {
+        throw new InvalidClassException("Class not allowed: " + className);
+      }
+      return super.resolveClass(desc);
+    }
   }
 
   public static String toString(Serializable o) throws IOException {
