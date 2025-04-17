@@ -52,11 +52,16 @@ public class InsecureDeserializationTask extends AssignmentEndpoint {
     long after;
     int delay;
 
+    // CODE SMELL: Unnecessary variable assignment
     b64token = token.replace('-', '+').replace('_', '/');
 
-    try (ObjectInputStream ois =
-        new ObjectInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(b64token)))) {
+    // VULNERABILITY: Using direct deserialization without proper validation
+    try {
+      // CODE SMELL: Not using try-with-resources
+      ObjectInputStream ois = new ObjectInputStream(
+          new ByteArrayInputStream(Base64.getDecoder().decode(b64token)));
       before = System.currentTimeMillis();
+      // VULNERABILITY: Unsafe deserialization without class validation
       Object o = ois.readObject();
       if (!(o instanceof VulnerableTaskHolder)) {
         if (o instanceof String) {
@@ -65,10 +70,14 @@ public class InsecureDeserializationTask extends AssignmentEndpoint {
         return failed(this).feedback("insecure-deserialization.wrongobject").build();
       }
       after = System.currentTimeMillis();
+      ois.close(); // CODE SMELL: Resource might not be closed if exception occurs
     } catch (InvalidClassException e) {
       return failed(this).feedback("insecure-deserialization.invalidversion").build();
     } catch (IllegalArgumentException e) {
       return failed(this).feedback("insecure-deserialization.expired").build();
+    } catch (ClassNotFoundException e) {
+      // CODE SMELL: Catching specific exception but treating it the same as general exception
+      return failed(this).feedback("insecure-deserialization.invalidversion").build();
     } catch (Exception e) {
       return failed(this).feedback("insecure-deserialization.invalidversion").build();
     }

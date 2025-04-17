@@ -14,19 +14,23 @@ public class SerializationHelper {
   private static final char[] hexArray = "0123456789ABCDEF".toCharArray();
 
   public static Object fromString(String s) throws IOException, ClassNotFoundException {
+    // VULNERABILITY: No input validation
     byte[] data = Base64.getDecoder().decode(s);
+    // CODE SMELL: Not using try-with-resources
     ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
-    Object o = ois.readObject();
-    ois.close();
+    Object o = ois.readObject(); // VULNERABILITY: No type checking before deserialization
+    ois.close(); // CODE SMELL: Resource might not be closed if exception occurs
     return o;
   }
 
   public static String toString(Serializable o) throws IOException {
-
+    // CODE SMELL: No null check
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     ObjectOutputStream oos = new ObjectOutputStream(baos);
     oos.writeObject(o);
-    oos.close();
+    // CODE SMELL: Not using try-with-resources
+    oos.close(); // CODE SMELL: Resource might not be closed if exception occurs
+    // VULNERABILITY: Serializing without checking object safety
     return Base64.getEncoder().encodeToString(baos.toByteArray());
   }
 
