@@ -31,7 +31,16 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class Assignment7 extends AssignmentEndpoint {
 
-  public static final String ADMIN_PASSWORD_LINK = "375afe1104f4a487a73823c50a9292a2";
+  private final String adminPasswordLink;
+
+  public Assignment7(
+      Flags flags, RestTemplate restTemplate, @Value("${webwolf.mail.url}") String webWolfMailURL,
+      @Value("${admin.password.link}") String adminPasswordLink) {
+    this.flags = flags;
+    this.restTemplate = restTemplate;
+    this.webWolfMailURL = webWolfMailURL;
+    this.adminPasswordLink = adminPasswordLink;
+  }
 
   private static final String TEMPLATE =
       "Hi, you requested a password reset link, please use this <a target='_blank'"
