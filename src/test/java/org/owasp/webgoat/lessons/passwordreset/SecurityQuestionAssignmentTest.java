@@ -18,17 +18,17 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 @ExtendWith(SpringExtension.class)
 public class SecurityQuestionAssignmentTest extends LessonTest {
 
-  private MockMvc mockMvc;
+  private MockMvc securityQuestionMockMvc;
 
   @BeforeEach
   public void setup() {
     when(webSession.getCurrentLesson()).thenReturn(new PasswordReset());
-    this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
+    this.securityQuestionMockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
   }
 
   @Test
   public void oneQuestionShouldNotSolveTheAssignment() throws Exception {
-    mockMvc
+    securityQuestionMockMvc
         .perform(
             MockMvcRequestBuilders.post("/PasswordReset/SecurityQuestions")
                 .param("question", "What is your favorite animal?"))
@@ -44,7 +44,7 @@ public class SecurityQuestionAssignmentTest extends LessonTest {
   @Test
   public void twoQuestionsShouldSolveTheAssignment() throws Exception {
     MockHttpSession mocksession = new MockHttpSession();
-    mockMvc
+    securityQuestionMockMvc
         .perform(
             MockMvcRequestBuilders.post("/PasswordReset/SecurityQuestions")
                 .param("question", "What is your favorite animal?")
