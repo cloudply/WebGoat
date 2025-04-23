@@ -54,8 +54,16 @@ public class InsecureDeserializationTask extends AssignmentEndpoint {
 
     b64token = token.replace('-', '+').replace('_', '/');
 
-    try (ObjectInputStream ois =
-        new ObjectInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(b64token)))) {
+    try (ObjectInputStream ois = new ObjectInputStream(
+            new ByteArrayInputStream(Base64.getDecoder().decode(b64token))) {
+        @Override
+        protected Class<?> resolveClass(java.io.ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+            if (desc.getName().equals(VulnerableTaskHolder.class.getName())) {
+                return super.resolveClass(desc);
+            }
+            throw new InvalidClassException("Unauthorized deserialization attempt", desc.getName());
+        }
+    }) {
       before = System.currentTimeMillis();
       Object o = ois.readObject();
       if (!(o instanceof VulnerableTaskHolder)) {
