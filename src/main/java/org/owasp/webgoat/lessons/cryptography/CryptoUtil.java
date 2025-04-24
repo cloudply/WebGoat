@@ -42,15 +42,15 @@ public class CryptoUtil {
   }
 
   public static String getPrivateKeyInPEM(KeyPair keyPair) {
-    String encodedString = "-----BEGIN PRIVATE KEY-----\n";
-    encodedString =
-        encodedString
-            + new String(
-                Base64.getEncoder().encode(keyPair.getPrivate().getEncoded()),
-                Charset.forName("UTF-8"))
-            + "\n";
-    encodedString = encodedString + "-----END PRIVATE KEY-----\n";
-    return encodedString;
+    StringBuilder encodedString = new StringBuilder();
+    encodedString.append("-----BEGIN PRIVATE KEY-----\n");
+    encodedString.append(
+        new String(
+            Base64.getEncoder().encode(keyPair.getPrivate().getEncoded()),
+            Charset.forName("UTF-8")))
+        .append("\n");
+    encodedString.append("-----END PRIVATE KEY-----\n");
+    return encodedString.toString();
   }
 
   public static String signMessage(String message, PrivateKey privateKey) {
