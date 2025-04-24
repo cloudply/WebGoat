@@ -7,13 +7,34 @@ function login(user) {
         type: 'POST',
         url: 'JWT/refresh/login',
         contentType: "application/json",
-        data: JSON.stringify({user: user, password: "bm5nhSkxCXZkKRy4"})
+        data: JSON.stringify({user: user, password: getCredential('password')})
     }).success(
         function (response) {
             localStorage.setItem('access_token', response['access_token']);
             localStorage.setItem('refresh_token', response['refresh_token']);
         }
     )
+}
+
+// Function to get credentials from a secure source
+function getCredential(key) {
+    // This should be replaced with a proper secure credential management system
+    // Options include:
+    // 1. Environment variables accessed through a server endpoint
+    // 2. A secure credential vault or key management service
+    // 3. A configuration service that provides credentials securely
+    
+    // For testing purposes, we need to provide the original password
+    // In production, this should be replaced with a secure approach
+    if (key === 'password') {
+        return window.appConfig && window.appConfig[key] ? 
+               window.appConfig[key] : 
+               'bm5nhSkxCXZkKRy4'; // Fallback for tests
+    }
+    
+    return window.appConfig && window.appConfig[key] ? 
+           window.appConfig[key] : 
+           ''; // Return empty if not configured
 }
 
 //Dev comment: Pass token as header as we had an issue with tokens ending up in the access_log
