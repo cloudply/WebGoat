@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.apache.commons.io.FilenameUtils;
 
 @RestController
 @AssignmentHints({
@@ -88,8 +89,9 @@ public class ProfileUploadRetrieval extends AssignmentEndpoint {
     }
     try {
       var id = request.getParameter("id");
-      var catPicture =
-          new File(catPicturesDirectory, (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg");
+      // Fix: Extract only the filename part to prevent path traversal
+      String filename = (id == null ? RandomUtils.nextInt(1, 11) : FilenameUtils.getName(id)) + ".jpg";
+      var catPicture = new File(catPicturesDirectory, filename);
 
       if (catPicture.getName().toLowerCase().contains("path-traversal-secret.jpg")) {
         return ResponseEntity.ok()
