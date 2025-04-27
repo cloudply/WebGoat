@@ -55,6 +55,17 @@ public class SqlInjectionLesson4 extends AssignmentEndpoint {
     return injectableQuery(query);
   }
 
+  /**
+   * IMPORTANT: This code is intentionally vulnerable to SQL injection to demonstrate security risks.
+   * In a real application, this would be fixed by:
+   * 1. Using PreparedStatement instead of Statement
+   * 2. Using parameterized queries with placeholders (?) for user input
+   * 3. Validating and sanitizing user input before using it in SQL queries
+   * 
+   * Example of secure implementation:
+   * PreparedStatement statement = connection.prepareStatement("UPDATE employees SET ...");
+   * statement.setString(1, userInput);
+   */
   protected AttackResult injectableQuery(String query) {
     try (Connection connection = dataSource.getConnection()) {
       try (Statement statement =
