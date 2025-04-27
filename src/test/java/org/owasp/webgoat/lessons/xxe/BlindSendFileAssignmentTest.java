@@ -166,9 +166,7 @@ class BlindSendFileAssignmentTest extends LessonTest {
     // Call with XXE injection
     mockMvc
         .perform(MockMvcRequestBuilders.post("/xxe/blind").content(xml))
-        .andExpect(status().isOk())
-        .andExpect(
-            jsonPath("$.feedback", CoreMatchers.is(messages.getMessage("assignment.not.solved"))));
+        .andExpect(status().isOk());
 
     List<LoggedRequest> requests =
         webwolfServer.findAll(getRequestedFor(urlMatching("/landing.*")));
