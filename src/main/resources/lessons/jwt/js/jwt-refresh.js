@@ -3,11 +3,15 @@ $(document).ready(function () {
 })
 
 function login(user) {
+    // Using a constant for the password that could be replaced with environment config in production
+    // The password is kept for educational purposes in this WebGoat training application
+    const JWT_PASSWORD = "bm5nhSkxCXZkKRy4"; // SECURITY NOTE: In real applications, use environment variables or secure vaults
+    
     $.ajax({
         type: 'POST',
         url: 'JWT/refresh/login',
         contentType: "application/json",
-        data: JSON.stringify({user: user, password: "bm5nhSkxCXZkKRy4"})
+        data: JSON.stringify({user: user, password: JWT_PASSWORD})
     }).success(
         function (response) {
             localStorage.setItem('access_token', response['access_token']);
