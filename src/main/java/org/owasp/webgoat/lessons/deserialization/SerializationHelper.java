@@ -15,19 +15,27 @@ public class SerializationHelper {
 
   public static Object fromString(String s) throws IOException, ClassNotFoundException {
     byte[] data = Base64.getDecoder().decode(s);
-    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
-    Object o = ois.readObject();
-    ois.close();
-    return o;
+    try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data)) {
+      @Override
+      protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+        // Only allow deserialization of known safe classes
+        String className = desc.getName();
+        if (className.startsWith("org.owasp.webgoat") || className.startsWith("org.dummy.insecure.framework")) {
+          return super.resolveClass(desc);
+        }
+        throw new InvalidClassException("Unauthorized deserialization attempt", className);
+      }
+    }) {
+      return ois.readObject();
+    }
   }
 
   public static String toString(Serializable o) throws IOException {
-
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    ObjectOutputStream oos = new ObjectOutputStream(baos);
-    oos.writeObject(o);
-    oos.close();
-    return Base64.getEncoder().encodeToString(baos.toByteArray());
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+      oos.writeObject(o);
+      return Base64.getEncoder().encodeToString(baos.toByteArray());
+    }
   }
 
   public static String show() throws IOException {
