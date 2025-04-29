@@ -13,21 +13,31 @@ public class SerializationHelper {
 
   private static final char[] hexArray = "0123456789ABCDEF".toCharArray();
 
-  public static Object fromString(String s) throws IOException, ClassNotFoundException {
+  public static <T> T fromString(String s, Class<T> expectedClass) throws IOException, ClassNotFoundException {
+    if (s == null || s.isEmpty()) {
+      throw new IllegalArgumentException("Input string cannot be null or empty");
+    }
+    
     byte[] data = Base64.getDecoder().decode(s);
-    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
-    Object o = ois.readObject();
-    ois.close();
-    return o;
+    try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data))) {
+      Object obj = ois.readObject();
+      if (!expectedClass.isInstance(obj)) {
+        throw new IllegalArgumentException("Deserialized object is not of expected type: " + expectedClass.getName());
+      }
+      return expectedClass.cast(obj);
+    }
   }
 
   public static String toString(Serializable o) throws IOException {
+    if (o == null) {
+      throw new IllegalArgumentException("Input object cannot be null");
+    }
 
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    ObjectOutputStream oos = new ObjectOutputStream(baos);
-    oos.writeObject(o);
-    oos.close();
-    return Base64.getEncoder().encodeToString(baos.toByteArray());
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+      oos.writeObject(o);
+      return Base64.getEncoder().encodeToString(baos.toByteArray());
+    }
   }
 
   public static String show() throws IOException {
