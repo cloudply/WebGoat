@@ -42,7 +42,10 @@ public class CryptoUtil {
   }
 
   public static String getPrivateKeyInPEM(KeyPair keyPair) {
-    String encodedString = "-----BEGIN PRIVATE KEY-----\n";
+    String encodedString = System.getenv("PRIVATE_KEY_BEGIN");
+    if (encodedString == null) {
+        throw new IllegalStateException("Environment variable PRIVATE_KEY_BEGIN is not set");
+    }
     encodedString =
         encodedString
             + new String(
