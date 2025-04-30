@@ -60,7 +60,7 @@ public class Assignment7Test extends AssignmentEndpointTest {
 
   @BeforeEach
   void setup() {
-    Assignment7 assignment7 = new Assignment7(new Flags(), restTemplate, webWolfMailURL);
+    Assignment7 assignment7 = new Assignment7(new Flags(), restTemplate, webWolfMailURL, "test-password-link");
     init(assignment7);
     mockMvc = standaloneSetup(assignment7).build();
   }
