@@ -7,7 +7,7 @@ function login(user) {
         type: 'POST',
         url: 'JWT/refresh/login',
         contentType: "application/json",
-        data: JSON.stringify({user: user, password: "bm5nhSkxCXZkKRy4"})
+        data: JSON.stringify({user: user, password: getCredential('jwt_password')})
     }).success(
         function (response) {
             localStorage.setItem('access_token', response['access_token']);
@@ -39,4 +39,11 @@ function newToken() {
             localStorage.setItem('refresh_token', refreshToken);
         }
     )
+}
+
+// Function to retrieve credentials from a secure source
+function getCredential(key) {
+    // This should be replaced with actual implementation to retrieve credentials
+    // from environment variables, secure storage, or a credential management service
+    return window.credentialStore ? window.credentialStore[key] : '';
 }
