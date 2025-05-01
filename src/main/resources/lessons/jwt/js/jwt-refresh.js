@@ -7,13 +7,20 @@ function login(user) {
         type: 'POST',
         url: 'JWT/refresh/login',
         contentType: "application/json",
-        data: JSON.stringify({user: user, password: "bm5nhSkxCXZkKRy4"})
+        data: JSON.stringify({user: user, password: getPassword()})
     }).success(
         function (response) {
             localStorage.setItem('access_token', response['access_token']);
             localStorage.setItem('refresh_token', response['refresh_token']);
         }
     )
+}
+
+// Function to get password from a secure source
+function getPassword() {
+    // In a real application, this would retrieve from environment variables,
+    // a secure vault, or a server-side API that manages credentials
+    return window.WEBGOAT_PASSWORD || '';
 }
 
 //Dev comment: Pass token as header as we had an issue with tokens ending up in the access_log
