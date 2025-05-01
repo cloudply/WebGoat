@@ -90,7 +90,9 @@ public class FileServer {
     // DO NOT use multipartFile.transferTo(), see
     // https://stackoverflow.com/questions/60336929/java-nio-file-nosuchfileexception-when-file-transferto-is-called
     try (InputStream is = multipartFile.getInputStream()) {
-      var destinationFile = destinationDir.toPath().resolve(multipartFile.getOriginalFilename());
+      var safeFilename =
+          org.apache.commons.io.FilenameUtils.getName(multipartFile.getOriginalFilename());
+      var destinationFile = destinationDir.toPath().resolve(safeFilename);
       Files.deleteIfExists(destinationFile);
       Files.copy(is, destinationFile);
     }

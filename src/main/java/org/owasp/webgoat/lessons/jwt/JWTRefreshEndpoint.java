@@ -30,13 +30,13 @@ import io.jsonwebtoken.Header;
 import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
 import org.owasp.webgoat.container.assignments.AttackResult;
@@ -89,7 +89,7 @@ public class JWTRefreshEndpoint extends AssignmentEndpoint {
             .signWith(io.jsonwebtoken.SignatureAlgorithm.HS512, JWT_PASSWORD)
             .compact();
     Map<String, Object> tokenJson = new HashMap<>();
-    String refreshToken = RandomStringUtils.randomAlphabetic(20);
+    String refreshToken = generateSecureRandomString(20);
     validRefreshTokens.add(refreshToken);
     tokenJson.put("access_token", token);
     tokenJson.put("refresh_token", refreshToken);
@@ -150,5 +150,15 @@ public class JWTRefreshEndpoint extends AssignmentEndpoint {
     } else {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
+  }
+
+  private String generateSecureRandomString(int length) {
+    SecureRandom secureRandom = new SecureRandom();
+    StringBuilder sb = new StringBuilder(length);
+    String ALPHA = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    for (int i = 0; i < length; i++) {
+      sb.append(ALPHA.charAt(secureRandom.nextInt(ALPHA.length())));
+    }
+    return sb.toString();
   }
 }

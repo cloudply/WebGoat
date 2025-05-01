@@ -58,9 +58,14 @@ public class Assignment7Test extends AssignmentEndpointTest {
   @Value("${webwolf.mail.url}")
   String webWolfMailURL;
 
+  private static final String TEST_ADMIN_PASSWORD_LINK = "test-admin-link";
+
   @BeforeEach
   void setup() {
     Assignment7 assignment7 = new Assignment7(new Flags(), restTemplate, webWolfMailURL);
+    // Set the admin password link for testing
+    org.springframework.test.util.ReflectionTestUtils.setField(
+        assignment7, "adminPasswordLink", TEST_ADMIN_PASSWORD_LINK);
     init(assignment7);
     mockMvc = standaloneSetup(assignment7).build();
   }
@@ -74,8 +79,7 @@ public class Assignment7Test extends AssignmentEndpointTest {
 
     result =
         mockMvc.perform(
-            MockMvcRequestBuilders.get(
-                RESET_PASSWORD_PATH + "/" + Assignment7.ADMIN_PASSWORD_LINK));
+            MockMvcRequestBuilders.get(RESET_PASSWORD_PATH + "/" + TEST_ADMIN_PASSWORD_LINK));
     result.andExpect(status().is(equalTo(HttpStatus.ACCEPTED.value())));
   }
 
