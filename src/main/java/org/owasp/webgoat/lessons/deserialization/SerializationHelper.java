@@ -14,20 +14,45 @@ public class SerializationHelper {
   private static final char[] hexArray = "0123456789ABCDEF".toCharArray();
 
   public static Object fromString(String s) throws IOException, ClassNotFoundException {
+    if (s == null || s.trim().isEmpty()) {
+      throw new IllegalArgumentException("Input string cannot be null or empty");
+    }
     byte[] data = Base64.getDecoder().decode(s);
-    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
-    Object o = ois.readObject();
-    ois.close();
-    return o;
+    try (ObjectInputStream ois = new ValidatingObjectInputStream(new ByteArrayInputStream(data))) {
+      return ois.readObject();
+    }
+  }
+
+  private static class ValidatingObjectInputStream extends ObjectInputStream {
+    private static final Set<String> ALLOWED_CLASSES = new HashSet<>(Arrays.asList(
+        "org.dummy.insecure.framework.VulnerableTaskHolder",
+        "java.lang.String",
+        "java.util.Date"
+    ));
+
+    public ValidatingObjectInputStream(InputStream in) throws IOException {
+      super(in);
+    }
+
+    @Override
+    protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+      String className = desc.getName();
+      if (!ALLOWED_CLASSES.contains(className)) {
+        throw new InvalidClassException("Class " + className + " is not allowed for deserialization");
+      }
+      return super.resolveClass(desc);
+    }
   }
 
   public static String toString(Serializable o) throws IOException {
-
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    ObjectOutputStream oos = new ObjectOutputStream(baos);
-    oos.writeObject(o);
-    oos.close();
-    return Base64.getEncoder().encodeToString(baos.toByteArray());
+    if (o == null) {
+      throw new IllegalArgumentException("Input object cannot be null");
+    }
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+      oos.writeObject(o);
+      return Base64.getEncoder().encodeToString(baos.toByteArray());
+    }
   }
 
   public static String show() throws IOException {
