@@ -4,8 +4,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.ObjectStreamClass;
 import java.io.Serializable;
 import java.util.Base64;
 
@@ -14,20 +16,32 @@ public class SerializationHelper {
   private static final char[] hexArray = "0123456789ABCDEF".toCharArray();
 
   public static Object fromString(String s) throws IOException, ClassNotFoundException {
+    if (s == null || s.trim().isEmpty()) {
+        throw new IllegalArgumentException("Invalid input");
+    }
     byte[] data = Base64.getDecoder().decode(s);
-    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
-    Object o = ois.readObject();
-    ois.close();
-    return o;
+    try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data)) {
+        @Override
+        protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+            if (!desc.getName().startsWith("org.owasp.webgoat")) {
+                throw new InvalidClassException("Unauthorized deserialization", desc.getName());
+            }
+            return super.resolveClass(desc);
+        }
+    }) {
+        return ois.readObject();
+    }
   }
 
   public static String toString(Serializable o) throws IOException {
-
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    ObjectOutputStream oos = new ObjectOutputStream(baos);
-    oos.writeObject(o);
-    oos.close();
-    return Base64.getEncoder().encodeToString(baos.toByteArray());
+    if (o == null) {
+        throw new IllegalArgumentException("Object cannot be null"); 
+    }
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+        oos.writeObject(o);
+        return Base64.getEncoder().encodeToString(baos.toByteArray());
+    }
   }
 
   public static String show() throws IOException {
