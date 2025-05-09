@@ -26,6 +26,7 @@ import static org.hsqldb.jdbc.JDBCResultSet.CONCUR_UPDATABLE;
 import static org.hsqldb.jdbc.JDBCResultSet.TYPE_SCROLL_SENSITIVE;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -78,26 +79,35 @@ public class SqlInjectionLesson9 extends AssignmentEndpoint {
       // do injectable query
       Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
       SqlInjectionLesson8.log(connection, queryInjection);
-      statement.execute(queryInjection);
-      // check new sum of salaries other employees and new salaries of John
-      int newJohnSalary = this.getJohnSalary(connection);
-      int newSumSalariesOfOtherEmployees = this.getSumSalariesOfOtherEmployees(connection);
-      if (newJohnSalary > oldMaxSalary
-          && newSumSalariesOfOtherEmployees == oldSumSalariesOfOtherEmployees) {
-        // success commit
-        connection.commit(); // need execute not executeQuery
-        connection.setAutoCommit(true);
-        output.append(
-            SqlInjectionLesson8.generateTable(this.getEmployeesDataOrderBySalaryDesc(connection)));
-        return success(this).feedback("sql-injection.9.success").output(output.toString()).build();
+      
+      try {
+        ResultSet results = statement.executeQuery(queryInjection);
+        
+        // check new sum of salaries other employees and new salaries of John
+        int newJohnSalary = this.getJohnSalary(connection);
+        int newSumSalariesOfOtherEmployees = this.getSumSalariesOfOtherEmployees(connection);
+        if (newJohnSalary > oldMaxSalary
+            && newSumSalariesOfOtherEmployees == oldSumSalariesOfOtherEmployees) {
+          // success commit
+          connection.commit(); // need execute not executeQuery
+          connection.setAutoCommit(true);
+          output.append(
+              SqlInjectionLesson8.generateTable(this.getEmployeesDataOrderBySalaryDesc(connection)));
+          return success(this).feedback("sql-injection.9.success").output(output.toString()).build();
+        }
+        // failed rollback
+        connection.rollback();
+        return failed(this)
+            .feedback("sql-injection.9.one")
+            .output(
+                SqlInjectionLesson8.generateTable(this.getEmployeesDataOrderBySalaryDesc(connection)))
+            .build();
+      } catch (SQLException e) {
+        connection.rollback();
+        return failed(this)
+            .output("<br><span class='feedback-negative'>" + e.getMessage() + "</span>")
+            .build();
       }
-      // failed roolback
-      connection.rollback();
-      return failed(this)
-          .feedback("sql-injection.9.one")
-          .output(
-              SqlInjectionLesson8.generateTable(this.getEmployeesDataOrderBySalaryDesc(connection)))
-          .build();
     } catch (SQLException e) {
       System.err.println(e.getMessage());
       return failed(this)
@@ -107,10 +117,11 @@ public class SqlInjectionLesson9 extends AssignmentEndpoint {
   }
 
   private int getSqlInt(Connection connection, String query) throws SQLException {
-    Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
-    ResultSet results = statement.executeQuery(query);
-    results.first();
-    return results.getInt(1);
+    try (Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE)) {
+      ResultSet results = statement.executeQuery(query);
+      results.first();
+      return results.getInt(1);
+    }
   }
 
   private int getMaxSalary(Connection connection) throws SQLException {
