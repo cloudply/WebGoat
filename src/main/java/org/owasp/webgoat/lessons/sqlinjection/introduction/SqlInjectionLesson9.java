@@ -26,6 +26,7 @@ import static org.hsqldb.jdbc.JDBCResultSet.CONCUR_UPDATABLE;
 import static org.hsqldb.jdbc.JDBCResultSet.TYPE_SCROLL_SENSITIVE;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -63,6 +64,7 @@ public class SqlInjectionLesson9 extends AssignmentEndpoint {
 
   protected AttackResult injectableQueryIntegrity(String name, String auth_tan) {
     StringBuilder output = new StringBuilder();
+    // This is intentionally vulnerable for the lesson
     String queryInjection =
         "SELECT * FROM employees WHERE last_name = '"
             + name
@@ -107,10 +109,11 @@ public class SqlInjectionLesson9 extends AssignmentEndpoint {
   }
 
   private int getSqlInt(Connection connection, String query) throws SQLException {
-    Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
-    ResultSet results = statement.executeQuery(query);
-    results.first();
-    return results.getInt(1);
+    try (Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
+         ResultSet results = statement.executeQuery(query)) {
+      results.first();
+      return results.getInt(1);
+    }
   }
 
   private int getMaxSalary(Connection connection) throws SQLException {
