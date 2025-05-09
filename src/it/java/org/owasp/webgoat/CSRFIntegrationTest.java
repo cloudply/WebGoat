@@ -23,7 +23,7 @@ import org.owasp.webgoat.container.lessons.Assignment;
 
 public class CSRFIntegrationTest extends IntegrationTest {
 
-  private static final String trickHTML3 =
+  private static final String TRICK_HTML_3 =
       "<!DOCTYPE html><html><body><form action=\"WEBGOATURL\" method=\"POST\">\n"
           + "<input type=\"hidden\" name=\"csrf\" value=\"thisisnotchecked\"/>\n"
           + "<input type=\"submit\" name=\"submit\" value=\"assignment 3\"/>\n"
@@ -64,7 +64,7 @@ public class CSRFIntegrationTest extends IntegrationTest {
   public void init() {
     startLesson("CSRF");
     webwolfFileDir = getWebWolfFileServerLocation();
-    uploadTrickHtml("csrf3.html", trickHTML3.replace("WEBGOATURL", url("csrf/basic-get-flag")));
+    uploadTrickHtml("csrf3.html", TRICK_HTML_3.replace("WEBGOATURL", url("csrf/basic-get-flag")));
     uploadTrickHtml("csrf4.html", trickHTML4.replace("WEBGOATURL", url("csrf/review")));
     uploadTrickHtml("csrf7.html", trickHTML7.replace("WEBGOATURL", url("csrf/feedback/message")));
     uploadTrickHtml(
