@@ -957,6 +957,7 @@ oop.inherits(Mode, JavaScriptMode);
 (function() {
 
     this.createWorker = function(session) {
+        // This method intentionally returns null as no worker is needed
         return null;
     };
 

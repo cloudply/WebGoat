@@ -20,7 +20,7 @@ public class EnvironmentExposure implements ApplicationContextAware {
   }
 
   @Override
-  public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+  public static void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
     context = applicationContext;
   }
 }
