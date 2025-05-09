@@ -957,6 +957,8 @@ oop.inherits(Mode, JavaScriptMode);
 (function() {
 
     this.createWorker = function(session) {
+        // Worker disabled for Java mode since syntax checking is not implemented
+        // This is normal for basic syntax highlighting only
         return null;
     };
 
