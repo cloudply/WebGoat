@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -63,22 +65,50 @@ public class ProfileZipSlip extends ProfileUploadBase {
     var currentImage = getProfilePictureAsBase64();
 
     try {
-      var uploadedZipFile = tmpZipDirectory.resolve(file.getOriginalFilename());
+      // Sanitize the filename to prevent path traversal
+      String originalFilename = file.getOriginalFilename();
+      if (originalFilename == null) {
+        originalFilename = "upload.zip";
+      }
+      String sanitizedFilename = new File(originalFilename).getName();
+      var uploadedZipFile = tmpZipDirectory.resolve(sanitizedFilename);
       FileCopyUtils.copy(file.getBytes(), uploadedZipFile.toFile());
 
       ZipFile zip = new ZipFile(uploadedZipFile.toFile());
       Enumeration<? extends ZipEntry> entries = zip.entries();
       while (entries.hasMoreElements()) {
         ZipEntry e = entries.nextElement();
-        File f = new File(tmpZipDirectory.toFile(), e.getName());
-        InputStream is = zip.getInputStream(e);
-        Files.copy(is, f.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        // Prevent zip slip by validating the entry path
+        Path entryPath = validateAndGetEntryPath(tmpZipDirectory, e.getName());
+        if (entryPath != null) {
+          InputStream is = zip.getInputStream(e);
+          Files.copy(is, entryPath, StandardCopyOption.REPLACE_EXISTING);
+        }
       }
 
       return isSolved(currentImage, getProfilePictureAsBase64());
     } catch (IOException e) {
       return failed(this).output(e.getMessage()).build();
     }
+  }
+
+  /**
+   * Validates a ZIP entry path to prevent zip slip vulnerability
+   * @param targetDir The target directory where files should be extracted
+   * @param entryName The name of the entry in the ZIP file
+   * @return The validated path or null if invalid
+   */
+  private Path validateAndGetEntryPath(Path targetDir, String entryName) {
+    // Normalize the path and ensure it doesn't contain directory traversal
+    Path targetPath = targetDir.resolve(entryName).normalize();
+    
+    // Check if the normalized path starts with the target directory
+    if (!targetPath.startsWith(targetDir)) {
+      log.warn("Zip slip attempt detected: {}", entryName);
+      return null;
+    }
+    
+    return targetPath;
   }
 
   private AttackResult isSolved(byte[] currentImage, byte[] newImage) {
