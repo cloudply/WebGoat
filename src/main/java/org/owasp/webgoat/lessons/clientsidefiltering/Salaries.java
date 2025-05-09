@@ -32,10 +32,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.xml.XMLConstants;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+import javax.xml.xpath.XPathFactoryConfigurationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -77,36 +79,45 @@ public class Salaries {
     File d = new File(webGoatHomeDirectory, "ClientSideFiltering/employees.xml");
     XPathFactory factory = XPathFactory.newInstance();
     XPath path = factory.newXPath();
+    
     int columns = 5;
     List<Map<String, Object>> json = new ArrayList<>();
     java.util.Map<String, Object> employeeJson = new HashMap<>();
 
-    try (InputStream is = new FileInputStream(d)) {
-      InputSource inputSource = new InputSource(is);
+    try {
+      // Fix for XXE vulnerability - enable secure processing
+      factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+      
+      try (InputStream is = new FileInputStream(d)) {
+        InputSource inputSource = new InputSource(is);
 
-      StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
 
-      sb.append("/Employees/Employee/UserID | ");
-      sb.append("/Employees/Employee/FirstName | ");
-      sb.append("/Employees/Employee/LastName | ");
-      sb.append("/Employees/Employee/SSN | ");
-      sb.append("/Employees/Employee/Salary ");
+        sb.append("/Employees/Employee/UserID | ");
+        sb.append("/Employees/Employee/FirstName | ");
+        sb.append("/Employees/Employee/LastName | ");
+        sb.append("/Employees/Employee/SSN | ");
+        sb.append("/Employees/Employee/Salary ");
 
-      String expression = sb.toString();
-      nodes = (NodeList) path.evaluate(expression, inputSource, XPathConstants.NODESET);
-      for (int i = 0; i < nodes.getLength(); i++) {
-        if (i % columns == 0) {
-          employeeJson = new HashMap<>();
-          json.add(employeeJson);
+        String expression = sb.toString();
+        nodes = (NodeList) path.evaluate(expression, inputSource, XPathConstants.NODESET);
+        for (int i = 0; i < nodes.getLength(); i++) {
+          if (i % columns == 0) {
+            employeeJson = new HashMap<>();
+            json.add(employeeJson);
+          }
+          Node node = nodes.item(i);
+          employeeJson.put(node.getNodeName(), node.getTextContent());
         }
-        Node node = nodes.item(i);
-        employeeJson.put(node.getNodeName(), node.getTextContent());
+      } catch (XPathExpressionException e) {
+        log.error("Unable to parse xml", e);
+      } catch (IOException e) {
+        log.error("Unable to read employees.xml at location: '{}'", d);
       }
-    } catch (XPathExpressionException e) {
-      log.error("Unable to parse xml", e);
-    } catch (IOException e) {
-      log.error("Unable to read employees.xml at location: '{}'", d);
+    } catch (XPathFactoryConfigurationException e) {
+      log.error("Error configuring XPath factory", e);
     }
+    
     return json;
   }
 }
